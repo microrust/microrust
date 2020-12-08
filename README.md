@@ -1,2 +1,2 @@
-# microrust
+# Microrust
 Microrust Application Framework
