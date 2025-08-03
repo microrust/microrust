@@ -1,6 +1,6 @@
 [package]
 name = "microrust"
-version = "0.0.0-alpha.1"
+version = "0.0.0-alpha.2"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Application Framework"
