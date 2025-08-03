@@ -1,6 +1,6 @@
 [package]
 name = "microrust_inject"
-version = "0.0.0-alpha.0"
+version = "0.0.0-alpha.1"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Dependency Injection"
@@ -13,7 +13,3 @@ microrust_inject_macros = { version = "0.0.0-alpha.0", path = "../inject_macros"
 ctor = { workspace = true }
 dashmap = { workspace = true }
 crosstrait = { workspace = true }
-
-[dev-dependencies]
-async-std = { workspace = true }
-async-trait = { workspace = true }
