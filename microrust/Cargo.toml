@@ -1,10 +1,11 @@
 [package]
 name = "microrust"
-version = "0.0.0"
+version = "0.0.0-alpha.0"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
-description = "Microrust Application Framework"
+description = "MicroRust Application Framework"
 readme = false
-edition = "2018"
+edition = "2024"
+resolver = "2"
 
 [dependencies]
