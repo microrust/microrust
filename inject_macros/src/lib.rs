@@ -134,6 +134,7 @@ pub fn inject_singleton_rwlock(
     TokenStream::from(tokens)
 }
 
+#[doc(hidden)]
 #[proc_macro_attribute]
 pub fn inject_singleton_tokio_mutex(
     _args: proc_macro::TokenStream,
@@ -142,6 +143,7 @@ pub fn inject_singleton_tokio_mutex(
     todo!()
 }
 
+#[doc(hidden)]
 #[proc_macro_attribute]
 pub fn inject_singleton_tokio_rwlock(
     _args: proc_macro::TokenStream,
@@ -150,6 +152,7 @@ pub fn inject_singleton_tokio_rwlock(
     todo!()
 }
 
+#[doc(hidden)]
 #[proc_macro_attribute]
 pub fn inject_request(
     args: proc_macro::TokenStream,
@@ -273,6 +276,7 @@ pub fn inject_trait_rwlock(
     TokenStream::from(tokens)
 }
 
+#[doc(hidden)]
 #[proc_macro_attribute]
 pub fn inject_dynosaur(
     _args: proc_macro::TokenStream,
