@@ -4,7 +4,7 @@ version = "0.0.0-alpha.1"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Application Framework"
-readme = false
+readme = "README.md"
 edition = "2024"
 resolver = "2"
 
