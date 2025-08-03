@@ -2,4 +2,4 @@
 MicroRust Application Framework
 
 ## Features
-* [Dependency Injection](https://github.com/microrust/microrust/tree/main/inject)
+* [Dependency Injection](https://crates.io/crates/microrust_inject)
