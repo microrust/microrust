@@ -208,7 +208,7 @@ version = "0.0.0-alpha.0"
 
 [[package]]
 name = "microrust_inject"
-version = "0.0.0-alpha.1"
+version = "0.0.0-alpha.2"
 dependencies = [
  "crosstrait",
  "ctor",
