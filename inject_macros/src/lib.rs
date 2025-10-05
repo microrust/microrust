@@ -134,45 +134,45 @@ pub fn inject_singleton_rwlock(
     TokenStream::from(tokens)
 }
 
-#[doc(hidden)]
-#[proc_macro_attribute]
-pub fn inject_singleton_tokio_mutex(
-    _args: proc_macro::TokenStream,
-    _input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    todo!()
-}
+// #[doc(hidden)]
+// #[proc_macro_attribute]
+// pub fn inject_singleton_tokio_mutex(
+//     _args: proc_macro::TokenStream,
+//     _input: proc_macro::TokenStream,
+// ) -> proc_macro::TokenStream {
+//     todo!()
+// }
 
-#[doc(hidden)]
-#[proc_macro_attribute]
-pub fn inject_singleton_tokio_rwlock(
-    _args: proc_macro::TokenStream,
-    _input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    todo!()
-}
+// #[doc(hidden)]
+// #[proc_macro_attribute]
+// pub fn inject_singleton_tokio_rwlock(
+//     _args: proc_macro::TokenStream,
+//     _input: proc_macro::TokenStream,
+// ) -> proc_macro::TokenStream {
+//     todo!()
+// }
 
-#[doc(hidden)]
-#[proc_macro_attribute]
-pub fn inject_request(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    if args.clone().into_iter().size_hint() != (1, Some(1)) {
-        panic!("Please provide a constructor method like #[inject_request(new)]");
-    }
-    let constructor_ident = parse_macro_input!(args as Ident);
+// #[doc(hidden)]
+// #[proc_macro_attribute]
+// pub fn inject_request(
+//     args: proc_macro::TokenStream,
+//     input: proc_macro::TokenStream,
+// ) -> proc_macro::TokenStream {
+//     if args.clone().into_iter().size_hint() != (1, Some(1)) {
+//         panic!("Please provide a constructor method like #[inject_request(new)]");
+//     }
+//     let constructor_ident = parse_macro_input!(args as Ident);
 
-    let input = parse_macro_input!(input as ItemImpl);
-    // println!("{:#?}", input);
-    if input.trait_ != None {
-        panic!("Please use attribute macro #[inject_trait]");
-    }
+//     let input = parse_macro_input!(input as ItemImpl);
+//     // println!("{:#?}", input);
+//     if input.trait_ != None {
+//         panic!("Please use attribute macro #[inject_trait]");
+//     }
 
-    // println!("{:#?}", input);
+//     // println!("{:#?}", input);
 
-    todo!()
-}
+//     todo!()
+// }
 
 #[proc_macro_attribute]
 pub fn inject_trait(
@@ -276,11 +276,11 @@ pub fn inject_trait_rwlock(
     TokenStream::from(tokens)
 }
 
-#[doc(hidden)]
-#[proc_macro_attribute]
-pub fn inject_dynosaur(
-    _args: proc_macro::TokenStream,
-    _input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    todo!()
-}
+// #[doc(hidden)]
+// #[proc_macro_attribute]
+// pub fn inject_dynosaur(
+//     _args: proc_macro::TokenStream,
+//     _input: proc_macro::TokenStream,
+// ) -> proc_macro::TokenStream {
+//     todo!()
+// }
