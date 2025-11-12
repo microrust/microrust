@@ -7,8 +7,7 @@ use std::{
 
 use crate::{instance::__get_instance_by_typeid, structs::__InstanceFactory};
 
-pub static __TRAIT_REGISTRY: LazyLock<DashMap<TypeId, TypeId>> =
-    LazyLock::new(DashMap::<_, _>::new);
+static __TRAIT_REGISTRY: LazyLock<DashMap<TypeId, TypeId>> = LazyLock::new(DashMap::<_, _>::new);
 
 #[doc(hidden)]
 pub fn __collect_trait<
@@ -20,12 +19,28 @@ pub fn __collect_trait<
     let type_id_trait = TypeId::of::<T>();
     // TODO: throw error, if multiple struct implement the same trait
     // exception: they are qualified?
-    if __TRAIT_REGISTRY.contains_key(&type_id_trait) {
+    if __contains_trait(&type_id_trait) {
         println!("trait allready collected");
         return;
     }
 
     let type_id_struct = TypeId::of::<U>();
+    __insert_trait(type_id_trait, type_id_struct);
+}
+
+#[doc(hidden)]
+pub fn __get_type_id_struct(type_id_trait: &TypeId) -> TypeId {
+    let value = __TRAIT_REGISTRY.get(type_id_trait).unwrap();
+    value.clone()
+}
+
+#[doc(hidden)]
+pub fn __contains_trait(type_id_trait: &TypeId) -> bool {
+    __TRAIT_REGISTRY.contains_key(type_id_trait)
+}
+
+#[doc(hidden)]
+pub fn __insert_trait(type_id_trait: TypeId, type_id_struct: TypeId) {
     __TRAIT_REGISTRY.insert(type_id_trait, type_id_struct);
 }
 

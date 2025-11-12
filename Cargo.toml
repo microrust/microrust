@@ -3,11 +3,11 @@ members = ["microrust", "inject", "inject_macros"]
 resolver = "2"
 
 [workspace.dependencies]
-proc-macro2 = "1.0"
-quote = "1.0"
-syn = { version = "2.0" }
-ctor = "0.5.0"
-dashmap = "6.1"
-crosstrait = "0.1"
+proc-macro2 = "1.0.103"
+quote = "1.0.42"
+syn = { version = "2.0.110" }
+ctor = "0.6.1"
+dashmap = "6.1.0"
+crosstrait = "0.1.3"
 async-std = { version = "1.13", features = ["attributes"] }
 async-trait = "0.1"
