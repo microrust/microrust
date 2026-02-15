@@ -17,7 +17,7 @@ pub fn inject_singleton_rwlock_impl(
 
     let input = parse_macro_input!(input as ItemImpl);
     // println!("{:#?}", input);
-    if input.trait_ != None {
+    if input.trait_.is_some() {
         panic!("Please use attribute macro #[inject_trait]");
     }
 

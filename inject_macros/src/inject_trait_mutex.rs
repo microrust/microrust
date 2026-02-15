@@ -9,7 +9,7 @@ pub fn inject_trait_mutex_impl(
 ) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as ItemImpl);
     // println!("{:#?}", input);
-    if input.trait_ == None {
+    if input.trait_.is_none() {
         return macro_error("Expecting: impl <trait> for <type>");
     }
 

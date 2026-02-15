@@ -7,6 +7,7 @@ description = "MicroRust Dependency Injection Macros"
 readme = false
 edition = "2024"
 resolver = "2"
+publish = false
 
 [lib]
 proc-macro = true
@@ -14,4 +15,7 @@ proc-macro = true
 [dependencies]
 proc-macro2 = { workspace = true }
 quote = { workspace = true }
-syn = { workspace = true, features = ["full", "extra-traits"]}
+syn = { workspace = true, features = ["full"] }
+
+[dev-dependencies]
+syn = { workspace = true, features = ["full", "extra-traits"] }

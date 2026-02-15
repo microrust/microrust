@@ -14,7 +14,7 @@ use crate::{
 extern crate proc_macro;
 
 #[proc_macro_attribute]
-pub fn inject_singleton(
+pub fn singleton(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -22,7 +22,7 @@ pub fn inject_singleton(
 }
 
 #[proc_macro_attribute]
-pub fn inject_singleton_mutex(
+pub fn singleton_mutex(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -30,7 +30,7 @@ pub fn inject_singleton_mutex(
 }
 
 #[proc_macro_attribute]
-pub fn inject_singleton_rwlock(
+pub fn singleton_rwlock(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -39,7 +39,7 @@ pub fn inject_singleton_rwlock(
 
 // #[doc(hidden)]
 // #[proc_macro_attribute]
-// pub fn inject_singleton_tokio_mutex(
+// pub fn singleton_tokio_mutex(
 //     _args: proc_macro::TokenStream,
 //     _input: proc_macro::TokenStream,
 // ) -> proc_macro::TokenStream {
@@ -48,7 +48,7 @@ pub fn inject_singleton_rwlock(
 
 // #[doc(hidden)]
 // #[proc_macro_attribute]
-// pub fn inject_singleton_tokio_rwlock(
+// pub fn singleton_tokio_rwlock(
 //     _args: proc_macro::TokenStream,
 //     _input: proc_macro::TokenStream,
 // ) -> proc_macro::TokenStream {
@@ -57,7 +57,7 @@ pub fn inject_singleton_rwlock(
 
 // #[doc(hidden)]
 // #[proc_macro_attribute]
-// pub fn inject_request(
+// pub fn transiant(
 //     args: proc_macro::TokenStream,
 //     input: proc_macro::TokenStream,
 // ) -> proc_macro::TokenStream {

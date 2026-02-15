@@ -15,7 +15,7 @@ pub fn inject_singleton_impl(
 
     let input = parse_macro_input!(input as ItemImpl);
     // println!("{:#?}", input);
-    if input.trait_ != None {
+    if input.trait_.is_some() {
         return macro_error("Please use attribute macro #[inject_trait]");
     }
 
@@ -40,7 +40,7 @@ pub fn inject_singleton_impl(
         })
         .next();
 
-    if constructor_fn == None {
+    if constructor_fn.is_none() {
         return macro_error("constructor method not found");
     }
 

@@ -14,14 +14,14 @@ Work in progress...
 ## Example
 
 ```rust
-use microrust_inject::{get_instance, inject_singleton};
+use microrust_inject::{get_instance, singleton};
 
 struct MyStruct {}
 
-#[inject_singleton(new)]
+#[singleton(new)]
 impl MyStruct {
     pub fn new() -> Self {
-        println!("MyStruct:new() called");
+        println!("MyStruct::new() called");
         Self {}
     }
 
