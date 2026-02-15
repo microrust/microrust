@@ -7,7 +7,7 @@ description = "MicroRust Dependency Injection"
 readme = "README.md"
 edition = "2024"
 resolver = "2"
-publish = false
+# publish = false
 
 [dependencies]
 microrust_inject_macros = { version = "0.0.0-alpha.6", path = "../inject_macros" }

@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.dependencies]
 proc-macro2 = "1.0.106"
 quote = "1.0.44"
-syn = { version = "2.0.115" }
+syn = { version = "2.0.116" }
 ctor = "0.6.3"
 dashmap = "6.1.0"
 crosstrait = "0.1.3"

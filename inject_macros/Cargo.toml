@@ -7,7 +7,7 @@ description = "MicroRust Dependency Injection Macros"
 readme = false
 edition = "2024"
 resolver = "2"
-publish = false
+# publish = false
 
 [lib]
 proc-macro = true
