@@ -1,6 +1,6 @@
 [package]
 name = "microrust_inject"
-version = "0.0.0-alpha.4"
+version = "0.0.0-alpha.6"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Dependency Injection"
@@ -10,7 +10,7 @@ resolver = "2"
 publish = false
 
 [dependencies]
-microrust_inject_macros = { version = "0.0.0-alpha.4", path = "../inject_macros" }
+microrust_inject_macros = { version = "0.0.0-alpha.6", path = "../inject_macros" }
 ctor = { workspace = true }
 dashmap = { workspace = true }
 crosstrait = { workspace = true }
