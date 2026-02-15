@@ -66,7 +66,7 @@ pub fn inject_singleton_impl(
         let tokens = quote! {
         #input
 
-        impl ::microrust_inject::__InstanceFactory for #struct_ident {
+        impl ::microrust::inject::__InstanceFactory for #struct_ident {
             fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
                 println!("__create_instance() called");
 
@@ -76,7 +76,7 @@ pub fn inject_singleton_impl(
             }
         }
 
-        microrust_inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust_inject::__collect_struct::<#struct_ident>();});
+        microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
         };
         // println!("{:#?}", tokens);
         return TokenStream::from(tokens);
@@ -89,7 +89,7 @@ pub fn inject_singleton_impl(
     let tokens = quote! {
     #input
 
-    impl ::microrust_inject::__InstanceFactory for #struct_ident {
+    impl ::microrust::inject::__InstanceFactory for #struct_ident {
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
             println!("__create_instance() called");
 
@@ -101,7 +101,7 @@ pub fn inject_singleton_impl(
         }
     }
 
-    microrust_inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust_inject::__collect_struct::<#struct_ident>();});
+    microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

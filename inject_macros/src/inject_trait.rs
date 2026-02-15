@@ -27,9 +27,9 @@ pub fn inject_trait_impl(
     #[async_trait]
     #input
 
-    microrust_inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust_inject::__collect_trait::<dyn #trait_ident, #struct_ident>();});
+    microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_ident, #struct_ident>();});
 
-    microrust_inject::register! { #struct_ident => dyn #trait_ident }
+    microrust::inject::register! { #struct_ident => dyn #trait_ident }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

@@ -31,7 +31,7 @@ pub fn inject_singleton_mutex_impl(
     let tokens = quote! {
     #input
 
-    impl ::microrust_inject::__InstanceMutexFactory for #struct_ident {
+    impl ::microrust::inject::__InstanceMutexFactory for #struct_ident {
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
             println!("__create_instance() called");
 
@@ -41,7 +41,7 @@ pub fn inject_singleton_mutex_impl(
         }
     }
 
-    microrust_inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust_inject::__collect_struct_mutex::<#struct_ident>();});
+    microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct_mutex::<#struct_ident>();});
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
