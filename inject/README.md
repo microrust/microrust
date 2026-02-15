@@ -1,20 +1,18 @@
 # MicroRust Dependency Injection
 
-Asynchronous dependency injection.
-
 Work in progress...
 
 ## Features
 
 * struct
-* async trait
+* (async) trait
 * Mutex
 * RwLock
 
 ## Example
 
 ```rust
-use microrust_inject::{get_instance, singleton};
+use microrust::inject::{get_instance, singleton};
 
 struct MyStruct {}
 
