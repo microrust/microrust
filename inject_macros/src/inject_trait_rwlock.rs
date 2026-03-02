@@ -29,7 +29,7 @@ pub fn inject_trait_rwlock_impl(
 
     microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait_rwlock::<dyn #trait_ident, #struct_ident>();});
 
-    microrust::inject::register! { ::std::sync::RwLock<#struct_ident> => ::std::sync::RwLock<dyn #trait_ident> }
+    microrust::inject::register! { ::tokio::sync::RwLock<#struct_ident> => ::tokio::sync::RwLock<dyn #trait_ident> }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

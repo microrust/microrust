@@ -1,6 +1,6 @@
 [package]
 name = "microrust"
-version = "0.0.0-alpha.6"
+version = "0.0.0-alpha.7"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Application Framework"
@@ -9,4 +9,4 @@ edition = "2024"
 resolver = "2"
 
 [dependencies]
-microrust_inject = { version = "0.0.0-alpha.6", path = "../inject" }
+microrust_inject = { version = "0.0.0-alpha.7", path = "../inject" }

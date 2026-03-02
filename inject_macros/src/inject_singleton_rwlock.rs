@@ -35,7 +35,7 @@ pub fn inject_singleton_rwlock_impl(
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
             println!("__create_instance() called");
 
-            let inst = ::std::sync::Arc::new(::std::sync::RwLock::new(#struct_ident::#constructor_ident()));
+            let inst = ::std::sync::Arc::new(::tokio::sync::RwLock::new(#struct_ident::#constructor_ident()));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
             inst_any
         }

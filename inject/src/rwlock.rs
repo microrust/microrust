@@ -1,8 +1,9 @@
 use crosstrait::Cast;
 use std::{
     any::{Any, TypeId},
-    sync::{Arc, RwLock},
+    sync::Arc,
 };
+use tokio::sync::RwLock;
 
 use crate::{
     instance::__get_instance_by_typeid,

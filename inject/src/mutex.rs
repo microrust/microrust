@@ -1,8 +1,9 @@
 use crosstrait::Cast;
 use std::{
     any::{Any, TypeId},
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
+use tokio::sync::Mutex;
 
 use crate::{
     instance::__get_instance_by_typeid,

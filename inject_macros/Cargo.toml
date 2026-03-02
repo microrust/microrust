@@ -1,13 +1,12 @@
 [package]
 name = "microrust_inject_macros"
-version = "0.0.0-alpha.6"
+version = "0.0.0-alpha.7"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Dependency Injection Macros"
 readme = false
 edition = "2024"
 resolver = "2"
-# publish = false
 
 [lib]
 proc-macro = true

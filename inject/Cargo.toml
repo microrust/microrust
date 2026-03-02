@@ -1,16 +1,16 @@
 [package]
 name = "microrust_inject"
-version = "0.0.0-alpha.6"
+version = "0.0.0-alpha.7"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 description = "MicroRust Dependency Injection"
 readme = "README.md"
 edition = "2024"
 resolver = "2"
-# publish = false
 
 [dependencies]
-microrust_inject_macros = { version = "0.0.0-alpha.6", path = "../inject_macros" }
+microrust_inject_macros = { version = "0.0.0-alpha.7", path = "../inject_macros" }
+crosstrait = { workspace = true }
 ctor = { workspace = true }
 dashmap = { workspace = true }
-crosstrait = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }

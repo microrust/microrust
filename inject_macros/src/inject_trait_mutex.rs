@@ -29,7 +29,7 @@ pub fn inject_trait_mutex_impl(
 
     microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait_mutex::<dyn #trait_ident, #struct_ident>();});
 
-    microrust::inject::register! { ::std::sync::Mutex<#struct_ident> => ::std::sync::Mutex<dyn #trait_ident> }
+    microrust::inject::register! { ::tokio::sync::Mutex<#struct_ident> => ::tokio::sync::Mutex<dyn #trait_ident> }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
