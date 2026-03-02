@@ -1,12 +1,19 @@
 default_job = "test"
 env.CARGO_TERM_COLOR = "always"
 
-[jobs.test]
-command = ["cargo", "test"]
+[jobs.test-parallel]
+command = ["cargo", "test", "--tests", "--", "--show-output"]
+env.RUST_LOG = "debug"
 need_stdout = true
 allow_warnings = true
 on_success = "scroll-to-bottom"
-# on_failure = "scroll-to-bottom"
+
+[jobs.test-not-parallel]
+command = ["cargo", "test", "--tests", "--", "--nocapture", "--test-threads=1"]
+env.RUST_LOG = "debug"
+need_stdout = true
+allow_warnings = true
+on_success = "scroll-to-bottom"
 
 [jobs.check]
 command = ["cargo", "check"]

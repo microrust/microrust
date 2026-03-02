@@ -10,8 +10,16 @@ resolver = "2"
 
 [dependencies]
 microrust_inject_macros = { version = "0.0.0-alpha.7", path = "../inject_macros" }
+
 crosstrait = { workspace = true }
 ctor = { workspace = true }
 dashmap = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 tracing = { workspace = true }
+
+[dev-dependencies]
+microrust = { version = "0.0.0-alpha.7", path = "../microrust" }
+
+async-trait = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tracing-test = { workspace = true, features = ["no-env-filter"] }
