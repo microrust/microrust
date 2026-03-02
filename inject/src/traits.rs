@@ -1,9 +1,10 @@
 use crosstrait::Cast;
 use dashmap::DashMap;
 use std::{
-    any::TypeId,
+    any::{TypeId, type_name},
     sync::{Arc, LazyLock},
 };
+use tracing::{debug, instrument};
 
 use crate::{instance::__get_instance_by_typeid, structs::__InstanceFactory};
 
@@ -44,8 +45,9 @@ pub fn __insert_trait(type_id_trait: TypeId, type_id_struct: TypeId) {
     __TRAIT_REGISTRY.insert(type_id_trait, type_id_struct);
 }
 
+#[instrument]
 pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
-    println!("get_trait_instance() called");
+    debug!("Type: {:#}", type_name::<T>());
 
     let type_id_trait = TypeId::of::<T>();
     // // TODO: make sure, that trait is implemented for struct

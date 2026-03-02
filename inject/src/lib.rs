@@ -7,7 +7,6 @@ mod traits;
 // re-export
 #[doc(hidden)]
 pub use crosstrait::register;
-#[doc(hidden)]
 pub use ctor::__support::ctor_parse;
 pub use instance::get_instance;
 pub use microrust_inject_macros::*;
@@ -21,4 +20,3 @@ pub use rwlock::{
 };
 pub use structs::{__InstanceFactory, __collect_struct};
 pub use traits::{__collect_trait, get_trait_instance};
-// pub use microrust_inject_macros::{inject_request, inject_singleton, inject_trait};

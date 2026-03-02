@@ -1,9 +1,10 @@
 use crosstrait::Cast;
 use std::{
-    any::{Any, TypeId},
+    any::{Any, TypeId, type_name},
     sync::Arc,
 };
 use tokio::sync::Mutex;
+use tracing::{debug, instrument};
 
 use crate::{
     instance::__get_instance_by_typeid,
@@ -52,8 +53,9 @@ pub fn __collect_trait_mutex<
     __insert_trait(type_id_trait, type_id_struct);
 }
 
+#[instrument]
 pub fn get_instance_mutex<T: __InstanceMutexFactory + Send + Sync + 'static>() -> Arc<Mutex<T>> {
-    println!("get_instance_mutex() called");
+    debug!("Type: {:#}", type_name::<T>());
 
     let type_id = TypeId::of::<T>();
     let inst = __get_instance_by_typeid(type_id);
@@ -61,8 +63,9 @@ pub fn get_instance_mutex<T: __InstanceMutexFactory + Send + Sync + 'static>() -
     cast
 }
 
+#[instrument]
 pub fn get_trait_instance_mutex<T: Send + Sync + ?Sized + 'static>() -> Arc<Mutex<T>> {
-    println!("get_trait_instance_mutex() called");
+    debug!("Type: {:#}", type_name::<T>());
 
     let type_id_trait = TypeId::of::<T>();
     // // TODO: make sure, that trait is implemented for struct
