@@ -1,6 +1,6 @@
-pub mod inject_singleton;
-pub mod inject_singleton_mutex;
-pub mod inject_singleton_rwlock;
-pub mod inject_trait;
-pub mod inject_trait_mutex;
-pub mod inject_trait_rwlock;
+pub mod singleton;
+pub mod singleton_mutex;
+pub mod singleton_rwlock;
+pub mod r#trait;
+pub mod trait_mutex;
+pub mod trait_rwlock;

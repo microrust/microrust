@@ -5,10 +5,9 @@ mod inject;
 use crate::{
     core::runtime::{core_runtime_main_impl, core_runtime_test_impl},
     inject::{
-        inject_singleton::inject_singleton_impl,
-        inject_singleton_mutex::inject_singleton_mutex_impl,
-        inject_singleton_rwlock::inject_singleton_rwlock_impl, inject_trait::inject_trait_impl,
-        inject_trait_mutex::inject_trait_mutex_impl, inject_trait_rwlock::inject_trait_rwlock_impl,
+        singleton::inject_singleton_impl, singleton_mutex::inject_singleton_mutex_impl,
+        singleton_rwlock::inject_singleton_rwlock_impl, r#trait::inject_trait_impl,
+        trait_mutex::inject_trait_mutex_impl, trait_rwlock::inject_trait_rwlock_impl,
     },
 };
 extern crate proc_macro;
