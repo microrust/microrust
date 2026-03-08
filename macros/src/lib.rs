@@ -6,8 +6,8 @@ use crate::{
     core::runtime::{core_runtime_main_impl, core_runtime_test_impl},
     inject::{
         singleton::inject_singleton_impl, singleton_mutex::inject_singleton_mutex_impl,
-        singleton_rwlock::inject_singleton_rwlock_impl, r#trait::inject_trait_impl,
-        trait_mutex::inject_trait_mutex_impl, trait_rwlock::inject_trait_rwlock_impl,
+        singleton_rwlock::inject_singleton_rwlock_impl, trait_mutex::inject_trait_mutex_impl,
+        trait_rwlock::inject_trait_rwlock_impl, traits::inject_trait_impl,
     },
 };
 extern crate proc_macro;
