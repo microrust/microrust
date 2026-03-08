@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use microrust::{inject::get_instance, singleton};
+use microrust::inject::{get_instance, singleton};
 use serial_test::serial;
 use tracing_test::traced_test;
 

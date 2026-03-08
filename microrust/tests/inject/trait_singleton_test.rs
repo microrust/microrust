@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use async_trait::async_trait;
-use microrust::{inject::get_trait_instance, inject_trait, singleton};
+use microrust::inject::{get_trait_instance, inject_trait, singleton};
 use serial_test::serial;
 use tracing_test::traced_test;
 

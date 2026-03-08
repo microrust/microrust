@@ -23,6 +23,6 @@ serial_test = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing-test = { workspace = true, features = ["no-env-filter"] }
 
-[[test]]
-name = "struct_singleton_test_expand"
-path = "tests/inject/struct_singleton_test.rs"
+# [[test]]
+# name = "struct_singleton_test_expand"
+# path = "tests/inject/struct_singleton_test.rs"

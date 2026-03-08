@@ -3,14 +3,14 @@ members = ["microrust", "macros"]
 resolver = "3"
 
 [workspace.package]
-version = "0.0.0-alpha.8"
+version = "0.0.0-alpha.9"
 authors = ["Steve Schneider"]
 license = "Apache-2.0"
 readme = "README.md"
 edition = "2024"
 
 [workspace.dependencies]
-microrust_macros = { version = "0.0.0-alpha.8", path = "macros" }
+microrust_macros = { version = "0.0.0-alpha.9", path = "macros" }
 
 async-trait = "0.1.89"
 crosstrait = "0.1.3"
