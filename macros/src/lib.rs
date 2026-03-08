@@ -1,15 +1,12 @@
 mod error;
-mod inject_singleton;
-mod inject_singleton_mutex;
-mod inject_singleton_rwlock;
-mod inject_trait;
-mod inject_trait_mutex;
-mod inject_trait_rwlock;
+mod inject;
 
 use crate::{
-    inject_singleton::inject_singleton_impl, inject_singleton_mutex::inject_singleton_mutex_impl,
-    inject_singleton_rwlock::inject_singleton_rwlock_impl, inject_trait::inject_trait_impl,
-    inject_trait_mutex::inject_trait_mutex_impl, inject_trait_rwlock::inject_trait_rwlock_impl,
+    inject::inject_singleton::inject_singleton_impl,
+    inject::inject_singleton_mutex::inject_singleton_mutex_impl,
+    inject::inject_singleton_rwlock::inject_singleton_rwlock_impl,
+    inject::inject_trait::inject_trait_impl, inject::inject_trait_mutex::inject_trait_mutex_impl,
+    inject::inject_trait_rwlock::inject_trait_rwlock_impl,
 };
 extern crate proc_macro;
 

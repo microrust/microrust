@@ -4,12 +4,9 @@ mod rwlock;
 mod structs;
 mod traits;
 
-// re-export
-#[doc(hidden)]
 pub use crosstrait::register;
-pub use ctor::__support::ctor_parse;
 pub use instance::get_instance;
-pub use microrust_inject_macros::*;
+pub use microrust_macros::*;
 pub use mutex::{
     __InstanceMutexFactory, __collect_struct_mutex, __collect_trait_mutex, get_instance_mutex,
     get_trait_instance_mutex,

@@ -7,9 +7,9 @@ use tokio::sync::RwLock;
 use tracing::{debug, instrument};
 
 use crate::{
-    instance::__get_instance_by_typeid,
-    structs::{__contains_function_pointer, __insert_function_pointer},
-    traits::{__contains_trait, __get_type_id_struct, __insert_trait},
+    inject::instance::__get_instance_by_typeid,
+    inject::structs::{__contains_function_pointer, __insert_function_pointer},
+    inject::traits::{__contains_trait, __get_type_id_struct, __insert_trait},
 };
 
 #[doc(hidden)]

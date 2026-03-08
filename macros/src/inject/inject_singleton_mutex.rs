@@ -41,7 +41,7 @@ pub fn inject_singleton_mutex_impl(
         }
     }
 
-    microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct_mutex::<#struct_ident>();});
+    microrust::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct_mutex::<#struct_ident>();});
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

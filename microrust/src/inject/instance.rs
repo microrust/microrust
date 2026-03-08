@@ -5,7 +5,7 @@ use std::{
 };
 use tracing::{debug, instrument};
 
-pub use crate::structs::{__InstanceFactory, __get_function_pointer};
+pub use crate::inject::structs::{__InstanceFactory, __get_function_pointer};
 
 static __SINGLETON_INSTANCES: LazyLock<DashMap<TypeId, Arc<dyn Any + Send + Sync>>> =
     LazyLock::new(DashMap::<_, _>::new);

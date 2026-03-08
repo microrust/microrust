@@ -6,7 +6,7 @@ use std::{
 };
 use tracing::{debug, instrument};
 
-use crate::{instance::__get_instance_by_typeid, structs::__InstanceFactory};
+use crate::{inject::instance::__get_instance_by_typeid, inject::structs::__InstanceFactory};
 
 static __TRAIT_REGISTRY: LazyLock<DashMap<TypeId, TypeId>> = LazyLock::new(DashMap::<_, _>::new);
 

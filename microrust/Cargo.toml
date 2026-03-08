@@ -1,12 +1,24 @@
 [package]
 name = "microrust"
-version = "0.0.0-alpha.7"
-authors = ["Steve Schneider"]
-license = "Apache-2.0"
 description = "MicroRust Application Framework"
-readme = "README.md"
-edition = "2024"
-resolver = "2"
+resolver = "3"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+readme.workspace = true
+edition.workspace = true
 
 [dependencies]
-microrust_inject = { version = "0.0.0-alpha.7", path = "../inject" }
+microrust_macros = { version = "0.0.0-alpha.7", path = "../macros" }
+
+crosstrait = { workspace = true }
+ctor = { workspace = true }
+dashmap = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+tracing = { workspace = true }
+
+[dev-dependencies]
+async-trait = { workspace = true }
+serial_test = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tracing-test = { workspace = true, features = ["no-env-filter"] }

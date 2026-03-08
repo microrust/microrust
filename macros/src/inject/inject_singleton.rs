@@ -76,7 +76,7 @@ pub fn inject_singleton_impl(
             }
         }
 
-        microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+        microrust::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
         };
         // println!("{:#?}", tokens);
         return TokenStream::from(tokens);
@@ -101,7 +101,7 @@ pub fn inject_singleton_impl(
         }
     }
 
-    microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+    microrust::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

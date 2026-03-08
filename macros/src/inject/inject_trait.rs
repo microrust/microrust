@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use quote::{format_ident, quote};
 use syn::{ItemImpl, parse_macro_input};
 
-pub fn inject_trait_rwlock_impl(
+pub fn inject_trait_impl(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -27,9 +27,9 @@ pub fn inject_trait_rwlock_impl(
     #[async_trait]
     #input
 
-    microrust::inject::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait_rwlock::<dyn #trait_ident, #struct_ident>();});
+    microrust::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_ident, #struct_ident>();});
 
-    microrust::inject::register! { ::tokio::sync::RwLock<#struct_ident> => ::tokio::sync::RwLock<dyn #trait_ident> }
+    microrust::inject::register! { #struct_ident => dyn #trait_ident }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

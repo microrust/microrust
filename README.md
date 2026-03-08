@@ -1,11 +1,9 @@
 # MicroRust
 MicroRust Application Framework
 
-Fully opinionated asynchronous batteries included application framework.
+A modern rust application framework, asynchronous and with batteries included.
 
 Inspired by frameworks like Spring Boot, Micronaut and Quarkus.
-
-WOP.
 
 ## Features
 * Dependency Injection
