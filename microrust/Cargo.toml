@@ -9,7 +9,7 @@ readme.workspace = true
 edition.workspace = true
 
 [dependencies]
-microrust_macros = { path = "../macros" }
+microrust_macros = { workspace = true }
 
 crosstrait = { workspace = true }
 ctor = { workspace = true }
