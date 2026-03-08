@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use microrust::inject::{get_instance, singleton};
+use microrust::{inject::get_instance, singleton};
 use serial_test::serial;
 use tracing_test::traced_test;
 
@@ -30,9 +30,8 @@ fn same_struct_singleton_instance_sync() {
     assert_eq!(inst.creation_time, inst2.creation_time);
 }
 
-#[tokio::test]
+#[microrust::test]
 #[traced_test]
-#[serial]
 async fn same_struct_singleton_instance_async() {
     let inst = get_instance::<MyStruct>();
     let inst2 = get_instance::<MyStruct>();

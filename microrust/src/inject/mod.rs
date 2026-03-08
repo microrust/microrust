@@ -6,7 +6,6 @@ mod traits;
 
 pub use crosstrait::register;
 pub use instance::get_instance;
-pub use microrust_macros::*;
 pub use mutex::{
     __InstanceMutexFactory, __collect_struct_mutex, __collect_trait_mutex, get_instance_mutex,
     get_trait_instance_mutex,

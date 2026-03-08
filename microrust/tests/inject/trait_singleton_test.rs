@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use async_trait::async_trait;
-use microrust::inject::{get_trait_instance, inject_trait, singleton};
+use microrust::{inject::get_trait_instance, inject_trait, singleton};
 use serial_test::serial;
 use tracing_test::traced_test;
 
@@ -30,9 +30,8 @@ impl MyTrait for MyStruct {
     }
 }
 
-#[tokio::test]
+#[microrust::test]
 #[traced_test]
-#[serial]
 async fn same_trait_singleton_instance() {
     let inst = get_trait_instance::<dyn MyTrait>();
     let inst2 = get_trait_instance::<dyn MyTrait>();

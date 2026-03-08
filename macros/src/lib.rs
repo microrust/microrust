@@ -1,14 +1,37 @@
+mod core;
 mod error;
 mod inject;
 
 use crate::{
-    inject::inject_singleton::inject_singleton_impl,
-    inject::inject_singleton_mutex::inject_singleton_mutex_impl,
-    inject::inject_singleton_rwlock::inject_singleton_rwlock_impl,
-    inject::inject_trait::inject_trait_impl, inject::inject_trait_mutex::inject_trait_mutex_impl,
-    inject::inject_trait_rwlock::inject_trait_rwlock_impl,
+    core::runtime::{core_runtime_main_impl, core_runtime_test_impl},
+    inject::{
+        inject_singleton::inject_singleton_impl,
+        inject_singleton_mutex::inject_singleton_mutex_impl,
+        inject_singleton_rwlock::inject_singleton_rwlock_impl, inject_trait::inject_trait_impl,
+        inject_trait_mutex::inject_trait_mutex_impl, inject_trait_rwlock::inject_trait_rwlock_impl,
+    },
 };
 extern crate proc_macro;
+
+// core
+
+#[proc_macro_attribute]
+pub fn main(
+    args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    core_runtime_main_impl(args, input)
+}
+
+#[proc_macro_attribute]
+pub fn test(
+    args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    core_runtime_test_impl(args, input)
+}
+
+// inject
 
 #[proc_macro_attribute]
 pub fn singleton(

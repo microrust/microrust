@@ -343,7 +343,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "microrust"
-version = "0.0.0-alpha.7"
+version = "0.0.0-alpha.8"
 dependencies = [
  "async-trait",
  "crosstrait",
@@ -358,10 +358,11 @@ dependencies = [
 
 [[package]]
 name = "microrust_macros"
-version = "0.0.0-alpha.7"
+version = "0.0.0-alpha.8"
 dependencies = [
  "proc-macro2",
  "quote",
+ "serial_test",
  "syn",
 ]
 
