@@ -1,20 +1,21 @@
-use dashmap::DashMap;
 use std::{
     any::{Any, TypeId, type_name},
-    sync::{Arc, LazyLock},
+    collections::HashMap,
+    sync::{Arc, LazyLock, Mutex},
 };
 use tracing::{debug, instrument};
 
 pub use crate::inject::structs::{__InstanceFactory, __get_function_pointer};
 
-static __SINGLETON_INSTANCES: LazyLock<DashMap<TypeId, Arc<dyn Any + Send + Sync>>> =
-    LazyLock::new(DashMap::<_, _>::new);
+static __SINGLETON_INSTANCES: LazyLock<Mutex<HashMap<TypeId, Arc<dyn Any + Send + Sync>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
 
 #[doc(hidden)]
 pub fn __get_instance_by_typeid(type_id: TypeId) -> Arc<dyn Any + Send + Sync> {
-    if __SINGLETON_INSTANCES.contains_key(&type_id) {
+    let mut map = __SINGLETON_INSTANCES.lock().unwrap();
+    if map.contains_key(&type_id) {
         debug!("singleton instance found");
-        let inst = __SINGLETON_INSTANCES.get(&type_id).unwrap();
+        let inst = map.get(&type_id).unwrap();
         let clone = inst.clone();
         return clone;
     }
@@ -23,7 +24,7 @@ pub fn __get_instance_by_typeid(type_id: TypeId) -> Arc<dyn Any + Send + Sync> {
     let fp = __get_function_pointer(type_id);
     let inst = fp();
     // let clone = inst.clone();
-    __SINGLETON_INSTANCES.insert(type_id, inst.clone());
+    map.insert(type_id, inst.clone());
     inst
 }
 

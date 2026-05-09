@@ -21,7 +21,6 @@ pub fn core_runtime_test_impl(
     let input = parse_macro_input!(input as ItemFn);
     let tokens = quote! {
         #[tokio::test]
-        #[serial]
         #input
     };
     TokenStream::from(tokens)
