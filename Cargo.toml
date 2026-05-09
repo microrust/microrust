@@ -15,7 +15,6 @@ microrust_macros = { version = "0.0.0-alpha.9", path = "macros" }
 async-trait = "0.1.89"
 crosstrait = "0.1.4"
 ctor = "1.0.4"
-dashmap = "6.1.0"
 proc-macro2 = "1.0.106"
 quote = "1.0.45"
 syn = "2.0.117"

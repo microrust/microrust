@@ -1,14 +1,15 @@
 use crosstrait::Cast;
-use dashmap::DashMap;
 use std::{
     any::{TypeId, type_name},
-    sync::{Arc, LazyLock},
+    collections::HashMap,
+    sync::{Arc, LazyLock, Mutex},
 };
 use tracing::{debug, instrument};
 
 use crate::{inject::instance::__get_instance_by_typeid, inject::structs::__InstanceFactory};
 
-static __TRAIT_REGISTRY: LazyLock<DashMap<TypeId, TypeId>> = LazyLock::new(DashMap::<_, _>::new);
+static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, TypeId>>> =
+    LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
 
 #[doc(hidden)]
 pub fn __collect_trait<
@@ -31,18 +32,21 @@ pub fn __collect_trait<
 
 #[doc(hidden)]
 pub fn __get_type_id_struct(type_id_trait: &TypeId) -> TypeId {
-    let value = __TRAIT_REGISTRY.get(type_id_trait).unwrap();
+    let map = __TRAIT_REGISTRY.lock().unwrap();
+    let value = map.get(type_id_trait).unwrap();
     value.clone()
 }
 
 #[doc(hidden)]
 pub fn __contains_trait(type_id_trait: &TypeId) -> bool {
-    __TRAIT_REGISTRY.contains_key(type_id_trait)
+    let map = __TRAIT_REGISTRY.lock().unwrap();
+    map.contains_key(type_id_trait)
 }
 
 #[doc(hidden)]
 pub fn __insert_trait(type_id_trait: TypeId, type_id_struct: TypeId) {
-    __TRAIT_REGISTRY.insert(type_id_trait, type_id_struct);
+    let mut map = __TRAIT_REGISTRY.lock().unwrap();
+    map.insert(type_id_trait, type_id_struct);
 }
 
 #[instrument]
@@ -51,7 +55,8 @@ pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
 
     let type_id_trait = TypeId::of::<T>();
     // // TODO: make sure, that trait is implemented for struct
-    let type_id_struct = __TRAIT_REGISTRY.get(&type_id_trait).unwrap();
+    let map = __TRAIT_REGISTRY.lock().unwrap();
+    let type_id_struct = map.get(&type_id_trait).unwrap();
     let inst = __get_instance_by_typeid(*type_id_struct);
     // let cast = inst.downcast::<T>().unwrap();
     // cast

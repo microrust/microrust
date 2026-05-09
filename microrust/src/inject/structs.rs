@@ -1,11 +1,12 @@
-use dashmap::DashMap;
 use std::{
     any::{Any, TypeId},
-    sync::{Arc, LazyLock},
+    collections::HashMap,
+    sync::{Arc, LazyLock, Mutex},
 };
 
-static __STRUCT_REGISTRY: LazyLock<DashMap<TypeId, Arc<fn() -> Arc<dyn Any + Send + Sync>>>> =
-    LazyLock::new(DashMap::<_, _>::new);
+static __STRUCT_REGISTRY: LazyLock<
+    Mutex<HashMap<TypeId, Arc<fn() -> Arc<dyn Any + Send + Sync>>>>,
+> = LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
 
 #[doc(hidden)]
 pub trait __InstanceFactory: Send + Sync {
@@ -32,13 +33,15 @@ pub fn __collect_struct<T: __InstanceFactory + Send + Sync + 'static>() {
 pub fn __get_function_pointer(type_id: TypeId) -> Arc<fn() -> Arc<dyn Any + Send + Sync>> {
     println!("__get_function_pointer() called");
 
-    let value = __STRUCT_REGISTRY.get(&type_id).unwrap();
+    let map = __STRUCT_REGISTRY.lock().unwrap();
+    let value = map.get(&type_id).unwrap();
     value.clone()
 }
 
 #[doc(hidden)]
 pub fn __contains_function_pointer(type_id: &TypeId) -> bool {
-    __STRUCT_REGISTRY.contains_key(type_id)
+    let map = __STRUCT_REGISTRY.lock().unwrap();
+    map.contains_key(type_id)
 }
 
 #[doc(hidden)]
@@ -47,5 +50,6 @@ pub fn __insert_function_pointer(
     fp: fn() -> Arc<dyn Any + Send + Sync + 'static>,
 ) {
     // Todo Arc:pin(fp)
-    __STRUCT_REGISTRY.insert(type_id, Arc::new(fp));
+    let mut map = __STRUCT_REGISTRY.lock().unwrap();
+    map.insert(type_id, Arc::new(fp));
 }
