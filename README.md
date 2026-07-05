@@ -10,10 +10,6 @@ Inspired by frameworks like Spring Boot, Micronaut and Quarkus.
 
 > Status: POC and WIP
 
-## Layers and Dependency Inversion
-
-![Dependency Inversion](diagram.png)
-
 ## Features
 * Dependency Injection
 
@@ -64,3 +60,7 @@ async fn main() {
     inst.print().await;
 }
 ```
+
+## Layers and Dependency Inversion
+
+![Dependency Inversion](diagram.png)

@@ -31,6 +31,33 @@
             <mxPoint x="130" y="119" as="targetPoint" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="iCMQUNzbUQX390NKqCEX-1" parent="1" style="shape=lineEllipse;line=vertical;perimeter=ellipsePerimeter;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffcd28;strokeColor=#000000;horizontal=0;spacing=2;convertToSvg=1;svgWhiteSpace=wrap;gradientColor=#ffa500;fontSize=13;" value="Inbound Adapter&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;Outbound Adapter" vertex="1">
+          <mxGeometry height="280" width="280" x="40" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="iCMQUNzbUQX390NKqCEX-2" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fff2cc;strokeColor=#000000;verticalAlign=top;fontStyle=2;convertToSvg=1;svgWhiteSpace=wrap;gradientColor=#ffd966;fontSize=13;" value="Application&lt;br&gt;Layer" vertex="1">
+          <mxGeometry height="200" width="200" x="80" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="iCMQUNzbUQX390NKqCEX-3" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d5e8d4;strokeColor=#000000;fontStyle=1;convertToSvg=1;svgWhiteSpace=wrap;gradientColor=#97d077;fontSize=14;" value="Domain&lt;br&gt;Layer" vertex="1">
+          <mxGeometry height="120" width="120" x="120" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="iCMQUNzbUQX390NKqCEX-4" edge="1" parent="1" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="105" y="472" as="sourcePoint" />
+            <mxPoint x="155" y="472" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iCMQUNzbUQX390NKqCEX-5" edge="1" parent="1" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="233" y="446" as="sourcePoint" />
+            <mxPoint x="283" y="446" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="iCMQUNzbUQX390NKqCEX-6" edge="1" parent="1" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;convertToSvg=0;strokeWidth=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="439" as="sourcePoint" />
+            <mxPoint x="130" y="439" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
