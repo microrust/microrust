@@ -4,14 +4,7 @@ mod inject;
 
 use crate::{
     core::runtime::{core_runtime_main_impl, core_runtime_test_impl},
-    inject::{
-        singleton::inject_singleton_impl, singleton_std_mutex::inject_singleton_std_mutex_impl,
-        singleton_std_rwlock::inject_singleton_std_rwlock_impl,
-        singleton_tokio_mutex::inject_singleton_tokio_mutex_impl,
-        singleton_tokio_rwlock::inject_singleton_tokio_rwlock_impl,
-        trait_tokio_mutex::inject_trait_tokio_mutex_impl,
-        trait_tokio_rwlock::inject_trait_tokio_rwlock_impl, traits::inject_trait_impl,
-    },
+    inject::{singleton::inject_singleton_impl, traits::inject_trait_impl},
 };
 extern crate proc_macro;
 
@@ -44,54 +37,12 @@ pub fn singleton(
 }
 
 #[proc_macro_attribute]
-pub fn singleton_std_mutex(
-    args: proc_macro::TokenStream,
+pub fn inject_trait(
+    _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    inject_singleton_std_mutex_impl(args, input)
+    inject_trait_impl(_args, input)
 }
-
-#[proc_macro_attribute]
-pub fn singleton_std_rwlock(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_singleton_std_rwlock_impl(args, input)
-}
-
-#[proc_macro_attribute]
-pub fn singleton_tokio_mutex(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_singleton_tokio_mutex_impl(args, input)
-}
-
-#[proc_macro_attribute]
-pub fn singleton_tokio_rwlock(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_singleton_tokio_rwlock_impl(args, input)
-}
-
-// #[doc(hidden)]
-// #[proc_macro_attribute]
-// pub fn singleton_tokio_mutex(
-//     _args: proc_macro::TokenStream,
-//     _input: proc_macro::TokenStream,
-// ) -> proc_macro::TokenStream {
-//     todo!()
-// }
-
-// #[doc(hidden)]
-// #[proc_macro_attribute]
-// pub fn singleton_tokio_rwlock(
-//     _args: proc_macro::TokenStream,
-//     _input: proc_macro::TokenStream,
-// ) -> proc_macro::TokenStream {
-//     todo!()
-// }
 
 // #[doc(hidden)]
 // #[proc_macro_attribute]
@@ -114,30 +65,6 @@ pub fn singleton_tokio_rwlock(
 
 //     todo!()
 // }
-
-#[proc_macro_attribute]
-pub fn inject_trait(
-    _args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_trait_impl(_args, input)
-}
-
-#[proc_macro_attribute]
-pub fn inject_trait_tokio_mutex(
-    _args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_trait_tokio_mutex_impl(_args, input)
-}
-
-#[proc_macro_attribute]
-pub fn inject_trait_tokio_rwlock(
-    _args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_trait_tokio_rwlock_impl(_args, input)
-}
 
 // #[doc(hidden)]
 // #[proc_macro_attribute]
