@@ -4,7 +4,7 @@ use proc_macro2::Ident;
 use quote::{format_ident, quote};
 use syn::{ItemImpl, parse_macro_input};
 
-pub fn inject_singleton_rwlock_impl(
+pub fn inject_singleton_tokio_rwlock_impl(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {

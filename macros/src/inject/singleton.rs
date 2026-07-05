@@ -82,7 +82,7 @@ pub fn inject_singleton_impl(
         return TokenStream::from(tokens);
     }
 
-    let arg1 = constructor_inputs.get(0).unwrap().ty.as_ref();
+    let arg1 = constructor_inputs.first().unwrap().ty.as_ref();
     // println!("{:#?}", arg1);
     // println!("{}", arg1.to_string());
 

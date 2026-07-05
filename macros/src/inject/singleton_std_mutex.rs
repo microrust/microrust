@@ -4,7 +4,7 @@ use proc_macro2::Ident;
 use quote::{format_ident, quote};
 use syn::{ItemImpl, parse_macro_input};
 
-pub fn inject_singleton_mutex_impl(
+pub fn inject_singleton_std_mutex_impl(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -35,13 +35,13 @@ pub fn inject_singleton_mutex_impl(
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
             println!("__create_instance() called");
 
-            let inst = ::std::sync::Arc::new(::tokio::sync::Mutex::new(#struct_ident::#constructor_ident()));
+            let inst = ::std::sync::Arc::new(::std::sync::Mutex::new(#struct_ident::#constructor_ident()));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
             inst_any
         }
     }
 
-    microrust::ctor_parse!(#[ctor] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct_mutex::<#struct_ident>();});
+    microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct_mutex::<#struct_ident>();});
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

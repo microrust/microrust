@@ -34,6 +34,5 @@ pub fn get_instance<T: __InstanceFactory + Send + Sync + 'static>() -> Arc<T> {
 
     let type_id = TypeId::of::<T>();
     let inst = __get_instance_by_typeid(type_id);
-    let cast = inst.downcast::<T>().unwrap();
-    cast
+    inst.downcast::<T>().unwrap()
 }

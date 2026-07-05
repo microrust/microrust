@@ -34,7 +34,7 @@ pub fn __collect_trait<
 pub fn __get_type_id_struct(type_id_trait: &TypeId) -> TypeId {
     let map = __TRAIT_REGISTRY.lock().unwrap();
     let value = map.get(type_id_trait).unwrap();
-    value.clone()
+    *value // value.clone() ?
 }
 
 #[doc(hidden)]

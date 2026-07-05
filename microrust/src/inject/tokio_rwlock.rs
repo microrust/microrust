@@ -59,8 +59,7 @@ pub fn get_instance_rwlock<T: __InstanceRwLockFactory + Send + Sync + 'static>()
 
     let type_id = TypeId::of::<T>();
     let inst = __get_instance_by_typeid(type_id);
-    let cast = inst.downcast::<RwLock<T>>().unwrap();
-    cast
+    inst.downcast::<RwLock<T>>().unwrap()
 }
 
 #[instrument]

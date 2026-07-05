@@ -59,8 +59,7 @@ pub fn get_instance_mutex<T: __InstanceMutexFactory + Send + Sync + 'static>() -
 
     let type_id = TypeId::of::<T>();
     let inst = __get_instance_by_typeid(type_id);
-    let cast = inst.downcast::<Mutex<T>>().unwrap();
-    cast
+    inst.downcast::<Mutex<T>>().unwrap()
 }
 
 #[instrument]
