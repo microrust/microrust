@@ -12,7 +12,7 @@ Inspired by frameworks like Spring Boot, Micronaut and Quarkus.
 
 ## Layers and Dependency Inversion
 
-![Dependency Inversion](diagram.svg)
+![Dependency Inversion](diagram.png)
 
 ## Features
 * Dependency Injection

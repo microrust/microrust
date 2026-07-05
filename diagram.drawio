@@ -1,0 +1,37 @@
+<mxfile host="Electron">
+  <diagram name="Page-1" id="B8OG8bGvoUUIjI_ojXKs">
+    <mxGraphModel dx="1294" dy="925" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="i8onex5NyoveC6vLIMyA-10" parent="1" style="shape=lineEllipse;line=vertical;perimeter=ellipsePerimeter;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffcd28;strokeColor=#000000;horizontal=0;spacing=2;convertToSvg=1;svgWhiteSpace=wrap;gradientColor=#ffa500;fontSize=13;" value="Inbound Adapter&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;Outbound Adapter" vertex="1">
+          <mxGeometry height="280" width="280" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="i8onex5NyoveC6vLIMyA-2" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#fff2cc;strokeColor=#000000;verticalAlign=top;fontStyle=2;convertToSvg=1;svgWhiteSpace=wrap;gradientColor=#ffd966;fontSize=13;" value="Application&lt;br&gt;Layer" vertex="1">
+          <mxGeometry height="200" width="200" x="80" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="i8onex5NyoveC6vLIMyA-1" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d5e8d4;strokeColor=#000000;fontStyle=1;convertToSvg=1;svgWhiteSpace=wrap;gradientColor=#97d077;fontSize=14;" value="Domain&lt;br&gt;Layer" vertex="1">
+          <mxGeometry height="120" width="120" x="120" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="i8onex5NyoveC6vLIMyA-18" edge="1" parent="1" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="105" y="152" as="sourcePoint" />
+            <mxPoint x="155" y="152" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="i8onex5NyoveC6vLIMyA-19" edge="1" parent="1" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="283" y="126" as="sourcePoint" />
+            <mxPoint x="233" y="126" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="i8onex5NyoveC6vLIMyA-16" edge="1" parent="1" style="edgeStyle=segmentEdgeStyle;endArrow=classic;html=1;curved=0;rounded=0;endSize=8;startSize=8;convertToSvg=0;strokeWidth=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="119" as="sourcePoint" />
+            <mxPoint x="130" y="119" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
