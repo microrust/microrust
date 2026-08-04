@@ -14,7 +14,7 @@ pub fn inject_trait_impl(
     }
 
     let trait_ = input.trait_.clone().unwrap();
-    let trait_ident = trait_.1.get_ident().unwrap();
+    let trait_ident = trait_.0.get_ident().unwrap();
 
     let struct_ident = match &*input.self_ty {
         syn::Type::Path(type_path) => type_path.path.segments.first().unwrap().ident.clone(),

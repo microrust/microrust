@@ -15,14 +15,17 @@ Inspired by frameworks like Spring Boot, Micronaut and Quarkus.
 
 ## Inbound Adapter (Server)
 - REST / JSON
+  - Topcoat
+- HTML WebApp
+  - Topcoat
 - GraphQL
 - gRPC
 - Message Subscription
 - MCP
-- Traditional HTML WebApp
 
 ## Outbound Adapter (Client)
 - Relational Database
+  - Toasty
 - Document Database
 - In-Memory Database
 - Object Store
