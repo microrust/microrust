@@ -10,7 +10,8 @@ struct MyStruct {
 
 #[async_trait]
 trait MyTrait: Send + Sync {
-    async fn creation_time(&self) -> Instant;
+    fn creation_time_sync(&self) -> Instant;
+    async fn creation_time_async(&self) -> Instant;
 }
 
 #[singleton(new)]
@@ -24,15 +25,29 @@ impl MyStruct {
 
 #[inject_trait]
 impl MyTrait for MyStruct {
-    async fn creation_time(&self) -> Instant {
+    fn creation_time_sync(&self) -> Instant {
+        self.creation_time
+    }
+    async fn creation_time_async(&self) -> Instant {
         self.creation_time
     }
 }
 
-#[microrust::test]
+#[test]
 #[traced_test]
-async fn same_trait_singleton_instance() {
+fn same_trait_singleton_instance_sync() {
     let inst = get_trait_instance::<dyn MyTrait>();
     let inst2 = get_trait_instance::<dyn MyTrait>();
-    assert_eq!(inst.creation_time().await, inst2.creation_time().await);
+    assert_eq!(inst.creation_time_sync(), inst2.creation_time_sync());
+}
+
+#[microrust::test]
+#[traced_test]
+async fn same_trait_singleton_instance_async() {
+    let inst = get_trait_instance::<dyn MyTrait>();
+    let inst2 = get_trait_instance::<dyn MyTrait>();
+    assert_eq!(
+        inst.creation_time_async().await,
+        inst2.creation_time_async().await
+    );
 }
