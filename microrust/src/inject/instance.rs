@@ -12,19 +12,21 @@ static __SINGLETON_INSTANCES: LazyLock<Mutex<HashMap<TypeId, Arc<dyn Any + Send 
 
 #[doc(hidden)]
 pub fn __get_instance_by_typeid(type_id: TypeId) -> Arc<dyn Any + Send + Sync> {
-    let mut map = __SINGLETON_INSTANCES.lock().unwrap();
+    let map = __SINGLETON_INSTANCES.lock().unwrap();
     if map.contains_key(&type_id) {
         debug!("singleton instance found");
         let inst = map.get(&type_id).unwrap();
-        let clone = inst.clone();
+        let clone = Arc::clone(&inst);
         return clone;
     }
+    drop(map); // Release lock
 
     debug!("creating singleton instance");
     let fp = __get_function_pointer(type_id);
     let inst = fp();
-    // let clone = inst.clone();
-    map.insert(type_id, inst.clone());
+    let mut map = __SINGLETON_INSTANCES.lock().unwrap();
+    map.insert(type_id, Arc::clone(&inst));
+    drop(map); // Release lock
     inst
 }
 

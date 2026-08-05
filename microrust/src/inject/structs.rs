@@ -35,7 +35,7 @@ pub fn __get_function_pointer(type_id: TypeId) -> Arc<fn() -> Arc<dyn Any + Send
 
     let map = __STRUCT_REGISTRY.lock().unwrap();
     let value = map.get(&type_id).unwrap();
-    value.clone()
+    Arc::clone(&value)
 }
 
 #[doc(hidden)]
