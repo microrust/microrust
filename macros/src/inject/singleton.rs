@@ -68,7 +68,7 @@ pub fn inject_singleton_impl(
 
     impl ::microrust::inject::__InstanceFactory for #struct_ident {
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
-            println!("__create_instance() called");
+            tracing::debug!("__create_instance() called");
 
             let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident());
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;

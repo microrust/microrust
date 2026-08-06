@@ -1,8 +1,10 @@
 use std::{
-    any::{Any, TypeId},
+    any::{Any, TypeId, type_name},
     collections::HashMap,
     sync::{Arc, LazyLock, Mutex},
 };
+
+use tracing::debug;
 
 static __STRUCT_REGISTRY: LazyLock<
     Mutex<HashMap<TypeId, Arc<fn() -> Arc<dyn Any + Send + Sync>>>>,
@@ -19,19 +21,22 @@ pub trait __InstanceFactory: Send + Sync {
 pub fn __collect_struct<T: __InstanceFactory + Send + Sync + 'static>() {
     println!("__collect_struct() called");
 
-    let type_id = TypeId::of::<T>();
-    if __contains_function_pointer(&type_id) {
+    let type_id_struct = TypeId::of::<T>();
+    println!("Struct TypeName: {:#}", type_name::<T>());
+    println!("Struct TypeId: {:?}", type_id_struct);
+
+    if __contains_function_pointer(&type_id_struct) {
         println!("struct allready collected");
         return;
     }
 
     let fp = T::__create_instance;
-    __insert_function_pointer(type_id, fp);
+    __insert_function_pointer(type_id_struct, fp);
 }
 
 #[doc(hidden)]
 pub fn __get_function_pointer(type_id: TypeId) -> Arc<fn() -> Arc<dyn Any + Send + Sync>> {
-    println!("__get_function_pointer() called");
+    debug!("__get_function_pointer() called");
 
     let map = __STRUCT_REGISTRY.lock().unwrap();
     let value = map.get(&type_id).unwrap();

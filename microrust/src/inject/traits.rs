@@ -1,6 +1,6 @@
 use crosstrait::Cast;
 use std::{
-    any::{TypeId, type_name},
+    any::{Any, TypeId, type_name, type_name_of_val},
     collections::HashMap,
     sync::{Arc, LazyLock, Mutex},
 };
@@ -12,6 +12,9 @@ static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, TypeId>>> =
     LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
 
 #[doc(hidden)]
+pub trait __FakeTrait: Send + Sync {}
+
+#[doc(hidden)]
 pub fn __collect_trait<
     T: Send + Sync + ?Sized + 'static,
     U: __InstanceFactory + Send + Sync + 'static,
@@ -19,6 +22,9 @@ pub fn __collect_trait<
     println!("__collect_trait() called");
 
     let type_id_trait = TypeId::of::<T>();
+    println!("Trait TypeName: {:#}", type_name::<T>());
+    println!("Trait TypeId: {:?}", type_id_trait);
+
     // TODO: throw error, if multiple struct implement the same trait
     // exception: they are qualified?
     if __contains_trait(&type_id_trait) {
@@ -27,6 +33,9 @@ pub fn __collect_trait<
     }
 
     let type_id_struct = TypeId::of::<U>();
+    println!("Struct TypeName: {:#}", type_name::<U>());
+    println!("Struct TypeId: {:?}", type_id_struct);
+
     __insert_trait(type_id_trait, type_id_struct);
 }
 
@@ -51,15 +60,38 @@ pub fn __insert_trait(type_id_trait: TypeId, type_id_struct: TypeId) {
 
 #[instrument]
 pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
-    debug!("Type: {:#}", type_name::<T>());
+    debug!("get_trait_instance() called");
 
     let type_id_trait = TypeId::of::<T>();
+    debug!("Input Trait TypeName: {:#}", type_name::<T>());
+    debug!("Input Trait TypeId: {:?}", type_id_trait);
+
     // // TODO: make sure, that trait is implemented for struct
     let map = __TRAIT_REGISTRY.lock().unwrap();
     let type_id_struct = map.get(&type_id_trait).unwrap();
     let inst = __get_instance_by_typeid(*type_id_struct);
-    // let cast = inst.downcast::<T>().unwrap();
-    // cast
-    let cast: Arc<T> = inst.cast().unwrap();
-    cast
+    let casted: Arc<T> = inst.cast().unwrap();
+    debug!("Output Trait TypeName: {:#}", type_name_of_val(&*casted));
+    debug!("Output Trait TypeId: {:?}", (*casted).type_id());
+    debug!("Output Trait Ref: {:p}", &(*casted));
+
+    casted
+}
+
+#[instrument]
+pub fn set_fake_trait_instance<
+    T: Send + Sync + ?Sized + 'static,
+    U: __FakeTrait + __InstanceFactory + Send + Sync + 'static,
+>() {
+    debug!("set_fake_trait_instance() called");
+
+    let type_id_trait = TypeId::of::<T>();
+    debug!("Input Trait TypeName: {:#}", type_name::<T>());
+    debug!("Input Trait TypeId: {:?}", type_id_trait);
+
+    let type_id_struct = TypeId::of::<U>();
+    debug!("Input Struct TypeName: {:#}", type_name::<U>());
+    debug!("Input Struct TypeId: {:?}", type_id_struct);
+
+    __insert_trait(type_id_trait, type_id_struct);
 }

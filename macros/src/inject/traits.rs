@@ -34,3 +34,33 @@ pub fn inject_trait_impl(
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
 }
+
+pub fn inject_fake_trait_impl(
+    _args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as ItemImpl);
+    // println!("{:#?}", input);
+    if input.trait_.is_none() {
+        return macro_error("Expecting: impl <trait> for <type>");
+    }
+
+    let trait_ = input.trait_.clone().unwrap();
+    let trait_ident = trait_.0.get_ident().unwrap();
+
+    let struct_ident = match &*input.self_ty {
+        syn::Type::Path(type_path) => type_path.path.segments.first().unwrap().ident.clone(),
+        _ => panic!("Expecting: impl <trait> for <type>"),
+    };
+
+    let tokens = quote! {
+    #[async_trait]
+    #input
+
+    impl ::microrust::inject::__FakeTrait for #struct_ident {}
+
+    microrust::inject::register! { #struct_ident => dyn #trait_ident }
+    };
+    // println!("{:#?}", tokens);
+    TokenStream::from(tokens)
+}
