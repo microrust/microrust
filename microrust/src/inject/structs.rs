@@ -4,11 +4,15 @@ use std::{
     sync::{Arc, LazyLock, Mutex},
 };
 
+use petgraph::graph::DiGraph;
 use tracing::debug;
 
 static __STRUCT_REGISTRY: LazyLock<
     Mutex<HashMap<TypeId, Arc<fn() -> Arc<dyn Any + Send + Sync>>>>,
 > = LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
+
+static __STRUCT_DEPS: LazyLock<Mutex<DiGraph<TypeId, ()>>> =
+    LazyLock::new(|| Mutex::new(DiGraph::new()));
 
 #[doc(hidden)]
 pub trait __InstanceFactory: Send + Sync {
@@ -32,6 +36,27 @@ pub fn __collect_struct<T: __InstanceFactory + Send + Sync + 'static>() {
 
     let fp = T::__create_instance;
     __insert_function_pointer(type_id_struct, fp);
+}
+
+#[doc(hidden)]
+pub fn __collect_struct_deps<
+    T: __InstanceFactory + Send + Sync + 'static,
+    U: __InstanceFactory + Send + Sync + 'static,
+>() {
+    println!("__collect_struct_deps() called");
+
+    let type_id_struct_from = TypeId::of::<T>();
+    println!("From Struct TypeName: {:#}", type_name::<T>());
+    println!("From Struct TypeId: {:?}", type_id_struct_from);
+
+    let type_id_struct_to = TypeId::of::<U>();
+    println!("To Struct TypeName: {:#}", type_name::<U>());
+    println!("To Struct TypeId: {:?}", type_id_struct_to);
+
+    let mut graph = __STRUCT_DEPS.lock().unwrap();
+    let from = graph.add_node(type_id_struct_from);
+    let to = graph.add_node(type_id_struct_to);
+    graph.add_edge(from, to, ());
 }
 
 #[doc(hidden)]

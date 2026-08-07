@@ -13,6 +13,7 @@ microrust_macros = { workspace = true }
 
 crosstrait = { workspace = true }
 ctor = { workspace = true }
+petgraph = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 tracing = { workspace = true }
 

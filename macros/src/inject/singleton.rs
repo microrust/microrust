@@ -44,65 +44,86 @@ pub fn inject_singleton_impl(
         return macro_error("constructor method not found");
     }
 
-    // let constructor_inputs: Vec<&syn::PatType> = constructor_fn
-    //     .unwrap()
-    //     .sig
-    //     .inputs
-    //     .iter()
-    //     .filter_map(|input| {
-    //         if let syn::FnArg::Typed(pat_type) = input {
-    //             Some(pat_type)
-    //         } else {
-    //             None
-    //         }
-    //     })
-    //     .collect();
-    // let has_inputs = !constructor_inputs.is_empty();
-    // // println!("{:#?}", constructor_inputs);
+    let constructor_inputs: Vec<&syn::PatType> = constructor_fn
+        .unwrap()
+        .sig
+        .inputs
+        .iter()
+        .filter_map(|input| {
+            if let syn::FnArg::Typed(pat_type) = input {
+                Some(pat_type)
+            } else {
+                None
+            }
+        })
+        .collect();
+    let has_inputs = !constructor_inputs.is_empty();
+    // println!("{:#?}", constructor_inputs);
 
     let ctor_ident = format_ident!("ctor_{}", struct_ident);
 
-    // if !has_inputs {
+    if !has_inputs {
+        let tokens = quote! {
+        #input
+
+        impl ::microrust::inject::__InstanceFactory for #struct_ident {
+            fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
+                tracing::debug!("__InstanceFactory::__create_instance() called");
+
+                let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident());
+                let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
+                inst_any
+            }
+        }
+
+        microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+        };
+        // println!("{:#?}", tokens);
+        return TokenStream::from(tokens);
+    }
+
+    let arg1 = constructor_inputs.first().unwrap().ty.as_ref();
+    // println!("{:#?}", arg1);
+
+    let path_args = match arg1 {
+        syn::Type::Path(type_path) => type_path.path.segments.first().unwrap().arguments.clone(),
+        _ => return macro_error("Ups, something went wrong!"),
+    };
+    let path_args_ab = match path_args {
+        syn::PathArguments::AngleBracketed(type_path) => type_path.args.first().unwrap().clone(),
+        _ => return macro_error("Ups, something went wrong!"),
+    };
+    let path_args_ab_ga = match path_args_ab {
+        syn::GenericArgument::Type(type_path) => type_path,
+        _ => return macro_error("Ups, something went wrong!"),
+    };
+    let args_type_ident = match path_args_ab_ga {
+        syn::Type::Path(type_path) => type_path.path.segments.first().unwrap().ident.clone(),
+        _ => return macro_error("Ups, something went wrong!"),
+    };
+    println!("{:#?}", args_type_ident);
+
+    // println!("{}", arg1.to_string());
+    let ctor_deps_ident = format_ident!("ctor_deps_{}", struct_ident);
+
     let tokens = quote! {
     #input
 
     impl ::microrust::inject::__InstanceFactory for #struct_ident {
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
-            tracing::debug!("__create_instance() called");
+            tracing::debug!("__InstanceFactory::__create_instance() called");
 
-            let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident());
+            let arg1: ::std::sync::#arg1 = get_instance();
+
+            let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident(arg1));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
             inst_any
         }
     }
 
     microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+    microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_deps_ident() {::microrust::inject::__collect_struct_deps::<#struct_ident, #args_type_ident>();});
     };
-    // println!("{:#?}", tokens);
-    // return TokenStream::from(tokens);
-    // }
-
-    // let arg1 = constructor_inputs.first().unwrap().ty.as_ref();
-    // // println!("{:#?}", arg1);
-    // // println!("{}", arg1.to_string());
-
-    // let tokens = quote! {
-    // #input
-
-    // impl ::microrust::inject::__InstanceFactory for #struct_ident {
-    //     fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
-    //         println!("__create_instance() called");
-
-    //         let arg1: ::std::sync::#arg1 = get_instance();
-
-    //         let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident(arg1));
-    //         let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
-    //         inst_any
-    //     }
-    // }
-
-    // microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
-    // };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
 }

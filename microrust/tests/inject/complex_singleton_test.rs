@@ -55,32 +55,32 @@ impl MyTrait2 for MyStruct1 {
     }
 }
 
-#[singleton(new)]
-impl MyStruct2 {
-    pub fn new() -> Self {
-        Self {
-            struct1: Arc::clone(&get_instance::<MyStruct1>()),
-            trait1: get_trait_instance::<dyn MyTrait1>(),
-            trait2: get_trait_instance::<dyn MyTrait2>(),
-        }
-    }
-}
+// #[singleton(new)]
+// impl MyStruct2 {
+//     pub fn new(
+//         struct1: Arc<MyStruct1>,
+//         trait1: Arc<dyn MyTrait1>,
+//         trait2: Arc<dyn MyTrait2>,
+//     ) -> Self {
+//         Self {
+//             struct1,
+//             trait1,
+//             trait2,
+//         }
+//     }
+// }
 
-#[singleton(new)]
-impl MyStruct3 {
-    pub fn new() -> Self {
-        Self {
-            struct2: Arc::clone(&get_instance::<MyStruct2>()),
-        }
-    }
-}
+// #[singleton(new)]
+// impl MyStruct3 {
+//     pub fn new(struct2: Arc<MyStruct2>) -> Self {
+//         Self { struct2 }
+//     }
+// }
 
 #[singleton(new)]
 impl MyStruct4 {
-    pub fn new() -> Self {
-        Self {
-            struct1: get_instance::<MyStruct1>(),
-        }
+    pub fn new(struct1: Arc<MyStruct1>) -> Self {
+        Self { struct1 }
     }
 }
 
