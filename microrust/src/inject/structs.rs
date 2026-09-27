@@ -71,7 +71,7 @@ pub fn __get_function_pointer(type_id: TypeId) -> Arc<__FactoryFn> {
 
     let map = __STRUCT_REGISTRY.lock().unwrap();
     let value = map.get(&type_id).unwrap();
-    Arc::clone(&value)
+    Arc::clone(value)
 }
 
 #[doc(hidden)]

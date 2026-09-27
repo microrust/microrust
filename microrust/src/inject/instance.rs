@@ -23,7 +23,7 @@ pub fn __get_instance_by_typeid(type_id: TypeId) -> __AnyArc {
     if map.contains_key(&type_id) {
         debug!("singleton instance found");
         let inst = map.get(&type_id).unwrap();
-        let clone = Arc::clone(&inst);
+        let clone = Arc::clone(inst);
         return clone;
     }
     // drop(map); // Release lock
