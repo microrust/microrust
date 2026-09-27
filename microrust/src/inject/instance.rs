@@ -7,11 +7,14 @@ use tracing::{debug, instrument};
 
 pub use crate::inject::structs::{__InstanceFactory, __get_function_pointer};
 
-static __SINGLETON_INSTANCES: LazyLock<Mutex<HashMap<TypeId, Arc<dyn Any + Send + Sync>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
+type __AnyArc = Arc<dyn Any + Send + Sync>;
+type __InstanceMap = HashMap<TypeId, __AnyArc>;
+
+static __SINGLETON_INSTANCES: LazyLock<Mutex<__InstanceMap>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[doc(hidden)]
-pub fn __get_instance_by_typeid(type_id: TypeId) -> Arc<dyn Any + Send + Sync> {
+pub fn __get_instance_by_typeid(type_id: TypeId) -> __AnyArc {
     debug!("__get_instance_by_typeid() called");
 
     debug!("__SINGLETON_INSTANCES map gets locked");

@@ -7,16 +7,22 @@ use std::{
 use petgraph::graph::DiGraph;
 use tracing::debug;
 
-static __STRUCT_REGISTRY: LazyLock<
-    Mutex<HashMap<TypeId, Arc<fn() -> Arc<dyn Any + Send + Sync>>>>,
-> = LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
+#[doc(hidden)]
+pub type __AnyArc = Arc<dyn Any + Send + Sync>;
+#[doc(hidden)]
+pub type __FactoryFn = fn() -> __AnyArc;
+#[doc(hidden)]
+pub type __FactoryMap = HashMap<TypeId, Arc<__FactoryFn>>;
+
+static __STRUCT_REGISTRY: LazyLock<Mutex<__FactoryMap>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 static __STRUCT_DEPS: LazyLock<Mutex<DiGraph<TypeId, ()>>> =
     LazyLock::new(|| Mutex::new(DiGraph::new()));
 
 #[doc(hidden)]
 pub trait __InstanceFactory: Send + Sync {
-    fn __create_instance() -> Arc<dyn Any + Send + Sync>
+    fn __create_instance() -> __AnyArc
     where
         Self: Send + Sync + Sized;
 }
@@ -60,7 +66,7 @@ pub fn __collect_struct_deps<
 }
 
 #[doc(hidden)]
-pub fn __get_function_pointer(type_id: TypeId) -> Arc<fn() -> Arc<dyn Any + Send + Sync>> {
+pub fn __get_function_pointer(type_id: TypeId) -> Arc<__FactoryFn> {
     debug!("__get_function_pointer() called");
 
     let map = __STRUCT_REGISTRY.lock().unwrap();
@@ -77,7 +83,7 @@ pub fn __contains_function_pointer(type_id: &TypeId) -> bool {
 #[doc(hidden)]
 pub fn __insert_function_pointer(
     type_id: TypeId,
-    fp: fn() -> Arc<dyn Any + Send + Sync + 'static>,
+    fp: __FactoryFn,
 ) {
     // Todo Arc:pin(fp)
     let mut map = __STRUCT_REGISTRY.lock().unwrap();
