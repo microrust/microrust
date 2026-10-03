@@ -89,6 +89,12 @@ impl MyStruct4 {
 fn same_singleton_instance_sync() {
     println!("Get MyStruct4");
     let inst_struct4 = get_instance::<MyStruct4>();
+    let inst_struct1 = get_instance::<MyStruct1>();
+    assert_eq!(
+        inst_struct1.creation_time,
+        inst_struct4.struct1.creation_time,
+    );
+
     // println!("Get MyStruct2");
     // let inst_struct2 = get_instance::<MyStruct2>();
     // println!("Get MyStruct1");

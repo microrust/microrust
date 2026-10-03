@@ -67,9 +67,11 @@ pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
     debug!("Input Trait TypeId: {:?}", type_id_trait);
 
     // // TODO: make sure, that trait is implemented for struct
-    let map = __TRAIT_REGISTRY.lock().unwrap();
-    let type_id_struct = map.get(&type_id_trait).unwrap();
-    let inst = __get_instance_by_typeid(*type_id_struct);
+    let type_id_struct = {
+        let map = __TRAIT_REGISTRY.lock().unwrap();
+        *map.get(&type_id_trait).unwrap()
+    };
+    let inst = __get_instance_by_typeid(type_id_struct);
     let casted: Arc<T> = inst.cast().unwrap();
     debug!("Output Trait TypeName: {:#}", type_name_of_val(&*casted));
     debug!("Output Trait TypeId: {:?}", (*casted).type_id());

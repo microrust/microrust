@@ -1,41 +1,42 @@
 use std::{
     any::{Any, TypeId, type_name, type_name_of_val},
     collections::HashMap,
-    sync::{Arc, LazyLock, Mutex},
+    sync::{Arc, LazyLock, Mutex, OnceLock},
 };
 use tracing::{debug, instrument};
 
 pub use crate::inject::structs::{__InstanceFactory, __get_function_pointer};
 
 type __AnyArc = Arc<dyn Any + Send + Sync>;
-type __InstanceMap = HashMap<TypeId, __AnyArc>;
+type __AnyCell = Arc<OnceLock<__AnyArc>>;
+type __InstanceMap = HashMap<TypeId, __AnyCell>;
 
 static __SINGLETON_INSTANCES: LazyLock<Mutex<__InstanceMap>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+fn __instance_cell(type_id: TypeId) -> __AnyCell {
+    let mut map = __SINGLETON_INSTANCES.lock().unwrap();
+    Arc::clone(map.entry(type_id).or_default())
+}
+
 #[doc(hidden)]
 pub fn __get_instance_by_typeid(type_id: TypeId) -> __AnyArc {
-    debug!("__get_instance_by_typeid() called");
+    debug!("__get_instance_by_typeid() called for {:?}", type_id);
 
-    debug!("__SINGLETON_INSTANCES map gets locked");
-    let mut map = __SINGLETON_INSTANCES.lock().unwrap();
-    debug!("__SINGLETON_INSTANCES map locked");
-    if map.contains_key(&type_id) {
-        debug!("singleton instance found");
-        let inst = map.get(&type_id).unwrap();
-        let clone = Arc::clone(inst);
-        return clone;
+    let cell = __instance_cell(type_id);
+    if let Some(inst) = cell.get() {
+        debug!("singleton instance found for {:?}", type_id);
+        return Arc::clone(inst);
     }
-    // drop(map); // Release lock
 
-    debug!("creating singleton instance");
-    // let mut map = __SINGLETON_INSTANCES.lock().unwrap();
-    let fp = __get_function_pointer(type_id);
-    let inst = fp();
-    map.insert(type_id, Arc::clone(&inst));
-    debug!("__SINGLETON_INSTANCES map gets unlocked");
-    drop(map); // Release lock
-    debug!("__SINGLETON_INSTANCES map unlocked");
+    let inst = Arc::clone(
+        cell.get_or_init(|| {
+            debug!("creating singleton instance for {:?}", type_id);
+            __get_function_pointer(type_id)()
+        }),
+    );
+
+    debug!("singleton instance resolved for {:?}", type_id);
     inst
 }
 
