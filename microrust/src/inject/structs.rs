@@ -59,9 +59,33 @@ pub fn __collect_struct_deps<
     println!("To Struct TypeName: {:#}", type_name::<U>());
     println!("To Struct TypeId: {:?}", type_id_struct_to);
 
+    __add_dep(type_id_struct_from, type_id_struct_to);
+}
+
+/// Records a dependency edge onto a trait object.
+///
+/// Separate from [`__collect_struct_deps`] because a trait object has no
+/// `__InstanceFactory` impl; the edge targets `TypeId::of::<dyn Trait>()`
+/// directly rather than the concrete type that happens to implement it.
+#[doc(hidden)]
+pub fn __collect_trait_deps<T: Send + Sync + 'static, U: Send + Sync + ?Sized + 'static>() {
+    println!("__collect_trait_deps() called");
+
+    let type_id_struct_from = TypeId::of::<T>();
+    println!("From Struct TypeName: {:#}", type_name::<T>());
+    println!("From Struct TypeId: {:?}", type_id_struct_from);
+
+    let type_id_trait_to = TypeId::of::<U>();
+    println!("To Trait TypeName: {:#}", type_name::<U>());
+    println!("To Trait TypeId: {:?}", type_id_trait_to);
+
+    __add_dep(type_id_struct_from, type_id_trait_to);
+}
+
+fn __add_dep(from: TypeId, to: TypeId) {
     let mut graph = __STRUCT_DEPS.lock().unwrap();
-    let from = graph.add_node(type_id_struct_from);
-    let to = graph.add_node(type_id_struct_to);
+    let from = graph.add_node(from);
+    let to = graph.add_node(to);
     graph.add_edge(from, to, ());
 }
 

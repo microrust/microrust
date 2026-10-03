@@ -20,6 +20,7 @@ struct MyStruct3 {
 
 struct MyStruct4 {
     pub struct1: Arc<MyStruct1>,
+    pub struct3: Arc<MyStruct3>,
 }
 
 #[async_trait]
@@ -55,32 +56,32 @@ impl MyTrait2 for MyStruct1 {
     }
 }
 
-// #[singleton(new)]
-// impl MyStruct2 {
-//     pub fn new(
-//         struct1: Arc<MyStruct1>,
-//         trait1: Arc<dyn MyTrait1>,
-//         trait2: Arc<dyn MyTrait2>,
-//     ) -> Self {
-//         Self {
-//             struct1,
-//             trait1,
-//             trait2,
-//         }
-//     }
-// }
+#[singleton(new)]
+impl MyStruct2 {
+    pub fn new(
+        struct1: Arc<MyStruct1>,
+        trait1: Arc<dyn MyTrait1>,
+        trait2: Arc<dyn MyTrait2>,
+    ) -> Self {
+        Self {
+            struct1,
+            trait1,
+            trait2,
+        }
+    }
+}
 
-// #[singleton(new)]
-// impl MyStruct3 {
-//     pub fn new(struct2: Arc<MyStruct2>) -> Self {
-//         Self { struct2 }
-//     }
-// }
+#[singleton(new)]
+impl MyStruct3 {
+    pub fn new(struct2: Arc<MyStruct2>) -> Self {
+        Self { struct2 }
+    }
+}
 
 #[singleton(new)]
 impl MyStruct4 {
-    pub fn new(struct1: Arc<MyStruct1>) -> Self {
-        Self { struct1 }
+    pub fn new(struct1: Arc<MyStruct1>, struct3: Arc<MyStruct3>) -> Self {
+        Self { struct1, struct3 }
     }
 }
 
@@ -94,50 +95,54 @@ fn same_singleton_instance_sync() {
         inst_struct1.creation_time,
         inst_struct4.struct1.creation_time,
     );
+    assert_eq!(
+        inst_struct1.creation_time,
+        inst_struct4.struct3.struct2.struct1.creation_time,
+    );
 
-    // println!("Get MyStruct2");
-    // let inst_struct2 = get_instance::<MyStruct2>();
-    // println!("Get MyStruct1");
-    // let inst_struct1 = get_instance::<MyStruct1>();
-    // assert_eq!(
-    //     inst_struct1.creation_time,
-    //     inst_struct2.struct1.creation_time,
-    // );
-    // assert_eq!(
-    //     inst_struct1.creation_time,
-    //     inst_struct3.struct2.struct1.creation_time,
-    // );
+    println!("Get MyStruct2");
+    let inst_struct2 = get_instance::<MyStruct2>();
+    println!("Get MyStruct1");
+    let inst_struct1 = get_instance::<MyStruct1>();
+    assert_eq!(
+        inst_struct1.creation_time,
+        inst_struct2.struct1.creation_time,
+    );
+    assert_eq!(
+        inst_struct1.creation_time,
+        get_instance::<MyStruct3>().struct2.struct1.creation_time,
+    );
 }
 
-// #[microrust::test]
-// #[traced_test]
-// async fn same_singleton_instance_async() {
-//     let inst_trait1 = get_trait_instance::<dyn MyTrait1>();
-//     let inst_trait2 = get_trait_instance::<dyn MyTrait2>();
-//     assert_eq!(
-//         inst_trait1.creation_time_1().await,
-//         inst_trait2.creation_time_2().await
-//     );
+#[microrust::test]
+#[traced_test]
+async fn same_singleton_instance_async() {
+    let inst_trait1 = get_trait_instance::<dyn MyTrait1>();
+    let inst_trait2 = get_trait_instance::<dyn MyTrait2>();
+    assert_eq!(
+        inst_trait1.creation_time_1().await,
+        inst_trait2.creation_time_2().await
+    );
 
-//     let inst_struct1 = get_instance::<MyStruct1>();
-//     assert_eq!(
-//         inst_struct1.creation_time,
-//         inst_trait2.creation_time_2().await
-//     );
+    let inst_struct1 = get_instance::<MyStruct1>();
+    assert_eq!(
+        inst_struct1.creation_time,
+        inst_trait2.creation_time_2().await
+    );
 
-//     let inst_struct2 = get_instance::<MyStruct2>();
-//     assert_eq!(
-//         inst_struct2.trait1.creation_time_1().await,
-//         inst_struct2.trait2.creation_time_2().await
-//     );
-//     assert_eq!(
-//         inst_struct2.struct1.creation_time,
-//         inst_struct2.trait2.creation_time_2().await
-//     );
+    let inst_struct2 = get_instance::<MyStruct2>();
+    assert_eq!(
+        inst_struct2.trait1.creation_time_1().await,
+        inst_struct2.trait2.creation_time_2().await
+    );
+    assert_eq!(
+        inst_struct2.struct1.creation_time,
+        inst_struct2.trait2.creation_time_2().await
+    );
 
-//     let inst_struct3 = get_instance::<MyStruct3>();
-//     assert_eq!(
-//         inst_struct3.struct2.struct1.creation_time,
-//         inst_struct2.trait2.creation_time_2().await
-//     );
-// }
+    let inst_struct3 = get_instance::<MyStruct3>();
+    assert_eq!(
+        inst_struct3.struct2.struct1.creation_time,
+        inst_struct2.trait2.creation_time_2().await
+    );
+}
