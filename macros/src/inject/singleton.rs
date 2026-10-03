@@ -68,7 +68,7 @@ pub fn inject_singleton_impl(
 
         impl ::microrust::inject::__InstanceFactory for #struct_ident {
             fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
-                tracing::debug!("__InstanceFactory::__create_instance() called");
+                ::microrust::__private::tracing::debug!("__InstanceFactory::__create_instance() called");
 
                 let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident());
                 let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
@@ -76,7 +76,7 @@ pub fn inject_singleton_impl(
             }
         }
 
-        microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+        ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
         };
         // println!("{:#?}", tokens);
         return TokenStream::from(tokens);
@@ -111,9 +111,9 @@ pub fn inject_singleton_impl(
 
     impl ::microrust::inject::__InstanceFactory for #struct_ident {
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
-            tracing::debug!("__InstanceFactory::__create_instance() called");
+            ::microrust::__private::tracing::debug!("__InstanceFactory::__create_instance() called");
 
-            let arg1: ::std::sync::#arg1 = get_instance();
+            let arg1: ::std::sync::#arg1 = ::microrust::inject::get_instance();
 
             let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident(arg1));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
@@ -121,8 +121,8 @@ pub fn inject_singleton_impl(
         }
     }
 
-    microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
-    microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_deps_ident() {::microrust::inject::__collect_struct_deps::<#struct_ident, #args_type_ident>();});
+    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_deps_ident() {::microrust::inject::__collect_struct_deps::<#struct_ident, #args_type_ident>();});
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

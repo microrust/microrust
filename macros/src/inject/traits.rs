@@ -21,15 +21,15 @@ pub fn inject_trait_impl(
         _ => panic!("Expecting: impl <trait> for <type>"),
     };
 
-    let ctor_ident = format_ident!("ctor_{}", trait_ident);
+    let ctor_ident = format_ident!("ctor_{}_{}", trait_ident, struct_ident);
 
     let tokens = quote! {
-    #[async_trait]
+    #[::microrust::__private::async_trait]
     #input
 
-    microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_ident, #struct_ident>();});
+    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_ident, #struct_ident>();});
 
-    microrust::inject::register! { #struct_ident => dyn #trait_ident }
+    ::microrust::inject::register! { #struct_ident => dyn #trait_ident }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
@@ -54,12 +54,12 @@ pub fn inject_fake_trait_impl(
     };
 
     let tokens = quote! {
-    #[async_trait]
+    #[::microrust::__private::async_trait]
     #input
 
     impl ::microrust::inject::__FakeTrait for #struct_ident {}
 
-    microrust::inject::register! { #struct_ident => dyn #trait_ident }
+    ::microrust::inject::register! { #struct_ident => dyn #trait_ident }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
