@@ -11,17 +11,17 @@ use crate::inject::error::InjectError;
 #[doc(hidden)]
 pub type __AnyArc = Arc<dyn Any + Send + Sync>;
 
-struct __FnEntry {
+pub(crate) struct __FnEntry {
     /// `TypeId` of the stored callable, used to reject mismatched mocks.
     sig: TypeId,
     /// Human-readable signature, for diagnostics only.
-    sig_name: &'static str,
+    pub(crate) sig_name: &'static str,
     value: __AnyArc,
 }
 
 type __FnRegistry = HashMap<String, __FnEntry>;
 
-static __FUNCTION_REGISTRY: LazyLock<Mutex<__FnRegistry>> =
+pub(crate) static __FUNCTION_REGISTRY: LazyLock<Mutex<__FnRegistry>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Registers a callable. Emitted by `#[inject_fn]` and run once at startup.

@@ -22,6 +22,8 @@ tracing = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing-test = { workspace = true, features = ["no-env-filter"] }
 
-# [[test]]
-# name = "struct_singleton_test_expand"
-# path = "tests/inject/struct_singleton_test.rs"
+# Own target: the fixture registers a deliberate dependency cycle, which would
+# poison the shared suite.
+[[test]]
+name = "cycle_test"
+path = "tests/inject/cycle_test.rs"

@@ -137,3 +137,45 @@ fn mock_replaces_the_registered_callable() {
   `#[inject_fn]` functions skip the boxing.
 - An `#[inject]` parameter must be `Arc<Struct>` or `Arc<dyn Trait>`, and must
   bind to a plain identifier.
+
+## Startup diagnostics
+
+Registries are filled from `#[ctor]` functions, which run in `.init_array`
+**before `main`**. At that point no `tracing` subscriber exists: the global max
+level starts at `OFF` and the global dispatch starts as `NO_SUBSCRIBER`, so any
+event emitted from a `ctor` is discarded before its arguments are formatted.
+Registration therefore stays silent, and the diagnostics are emitted on demand
+instead.
+
+Call this once, after installing your subscriber:
+
+```rust
+fn main() {
+    tracing_subscriber::fmt::init();
+
+    microrust::inject::report_registrations();
+}
+```
+
+It logs every registered struct, trait binding and injectable function, plus a
+dependency-edge count, at `DEBUG`.
+
+### Dependency cycles
+
+The same pass walks the struct dependency graph. If two singletons depend on
+each other, resolving them would re-enter a `OnceLock` that is still
+initializing and **deadlock** rather than fail, so the cycle is reported up
+front with the offending types named:
+
+```text
+[microrust] found dependency cycle(s) detected in the injection graph:
+    cycle_test::CycleA -> cycle_test::CycleB -> cycle_test::CycleA
+```
+
+`report_registrations()` panics in that case, so call it during startup rather
+than on a request path. `microrust::inject::dependency_cycles()` returns the
+same information as data if you would rather inspect it yourself.
+
+As a safety net for applications that never call `report_registrations()`, the
+first `get_instance()` in a process performs the same check and fails with the
+same message instead of deadlocking.

@@ -11,13 +11,37 @@ use tracing::debug;
 pub type __AnyArc = Arc<dyn Any + Send + Sync>;
 #[doc(hidden)]
 pub type __FactoryFn = fn() -> __AnyArc;
-#[doc(hidden)]
-pub type __FactoryMap = HashMap<TypeId, Arc<__FactoryFn>>;
 
-static __STRUCT_REGISTRY: LazyLock<Mutex<__FactoryMap>> =
+/// A registered struct factory plus the name to report it under.
+///
+/// The name is captured at registration time because by the time anything is
+/// logged the concrete type is long gone behind a `TypeId`.
+#[doc(hidden)]
+#[derive(Clone, Copy)]
+pub struct __FactoryEntry {
+    pub name: &'static str,
+    pub factory: __FactoryFn,
+}
+
+#[doc(hidden)]
+pub type __FactoryMap = HashMap<TypeId, __FactoryEntry>;
+
+/// A node in the struct dependency graph.
+///
+/// Carries `type_id` for identity and `name` for diagnostics; the graph is only
+/// ever traversed for reporting and cycle detection, both of which need to name
+/// the types involved.
+#[doc(hidden)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct __DepNode {
+    pub type_id: TypeId,
+    pub name: &'static str,
+}
+
+pub(crate) static __STRUCT_REGISTRY: LazyLock<Mutex<__FactoryMap>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-static __STRUCT_DEPS: LazyLock<Mutex<DiGraph<TypeId, ()>>> =
+pub(crate) static __STRUCT_DEPS: LazyLock<Mutex<DiGraph<__DepNode, ()>>> =
     LazyLock::new(|| Mutex::new(DiGraph::new()));
 
 #[doc(hidden)]
@@ -29,19 +53,24 @@ pub trait __InstanceFactory: Send + Sync {
 
 #[doc(hidden)]
 pub fn __collect_struct<T: __InstanceFactory + Send + Sync + 'static>() {
-    println!("__collect_struct() called");
+    debug!("__collect_struct() called for {}", type_name::<T>());
 
     let type_id_struct = TypeId::of::<T>();
-    println!("Struct TypeName: {:#}", type_name::<T>());
-    println!("Struct TypeId: {:?}", type_id_struct);
+    debug!("Struct TypeName: {:#}", type_name::<T>());
+    debug!("Struct TypeId: {:?}", type_id_struct);
 
     if __contains_function_pointer(&type_id_struct) {
-        println!("struct allready collected");
+        debug!("struct allready collected");
         return;
     }
 
-    let fp = T::__create_instance;
-    __insert_function_pointer(type_id_struct, fp);
+    __insert_function_pointer(
+        type_id_struct,
+        __FactoryEntry {
+            name: type_name::<T>(),
+            factory: T::__create_instance,
+        },
+    );
 }
 
 #[doc(hidden)]
@@ -49,17 +78,18 @@ pub fn __collect_struct_deps<
     T: __InstanceFactory + Send + Sync + 'static,
     U: __InstanceFactory + Send + Sync + 'static,
 >() {
-    println!("__collect_struct_deps() called");
+    debug!("__collect_struct_deps() called: {} -> {}", type_name::<T>(), type_name::<U>());
 
-    let type_id_struct_from = TypeId::of::<T>();
-    println!("From Struct TypeName: {:#}", type_name::<T>());
-    println!("From Struct TypeId: {:?}", type_id_struct_from);
-
-    let type_id_struct_to = TypeId::of::<U>();
-    println!("To Struct TypeName: {:#}", type_name::<U>());
-    println!("To Struct TypeId: {:?}", type_id_struct_to);
-
-    __add_dep(type_id_struct_from, type_id_struct_to);
+    __add_dep(
+        __DepNode {
+            type_id: TypeId::of::<T>(),
+            name: type_name::<T>(),
+        },
+        __DepNode {
+            type_id: TypeId::of::<U>(),
+            name: type_name::<U>(),
+        },
+    );
 }
 
 /// Records a dependency edge onto a trait object.
@@ -69,33 +99,49 @@ pub fn __collect_struct_deps<
 /// directly rather than the concrete type that happens to implement it.
 #[doc(hidden)]
 pub fn __collect_trait_deps<T: Send + Sync + 'static, U: Send + Sync + ?Sized + 'static>() {
-    println!("__collect_trait_deps() called");
+    debug!("__collect_trait_deps() called: {} -> {}", type_name::<T>(), type_name::<U>());
 
-    let type_id_struct_from = TypeId::of::<T>();
-    println!("From Struct TypeName: {:#}", type_name::<T>());
-    println!("From Struct TypeId: {:?}", type_id_struct_from);
-
-    let type_id_trait_to = TypeId::of::<U>();
-    println!("To Trait TypeName: {:#}", type_name::<U>());
-    println!("To Trait TypeId: {:?}", type_id_trait_to);
-
-    __add_dep(type_id_struct_from, type_id_trait_to);
+    __add_dep(
+        __DepNode {
+            type_id: TypeId::of::<T>(),
+            name: type_name::<T>(),
+        },
+        __DepNode {
+            type_id: TypeId::of::<U>(),
+            name: type_name::<U>(),
+        },
+    );
 }
 
-fn __add_dep(from: TypeId, to: TypeId) {
+/// Adds a `from -> to` edge, reusing existing nodes for types already present.
+///
+/// Reuse is required for correctness, not tidiness: `petgraph` identifies nodes
+/// by index, so blindly adding a node per edge would give a type depended on by
+/// three structs three disconnected nodes and make traversal meaningless.
+fn __add_dep(from: __DepNode, to: __DepNode) {
     let mut graph = __STRUCT_DEPS.lock().unwrap();
-    let from = graph.add_node(from);
-    let to = graph.add_node(to);
+
+    let from = __dep_node(&mut graph, from);
+    let to = __dep_node(&mut graph, to);
     graph.add_edge(from, to, ());
 }
 
+fn __dep_node(
+    graph: &mut DiGraph<__DepNode, ()>,
+    node: __DepNode,
+) -> petgraph::graph::NodeIndex {
+    graph
+        .node_indices()
+        .find(|index| graph[*index] == node)
+        .unwrap_or_else(|| graph.add_node(node))
+}
+
 #[doc(hidden)]
-pub fn __get_function_pointer(type_id: TypeId) -> Arc<__FactoryFn> {
-    debug!("__get_function_pointer() called");
+pub fn __factory_entry(type_id: TypeId) -> __FactoryEntry {
+    debug!("__factory_entry() called");
 
     let map = __STRUCT_REGISTRY.lock().unwrap();
-    let value = map.get(&type_id).unwrap();
-    Arc::clone(value)
+    *map.get(&type_id).unwrap()
 }
 
 #[doc(hidden)]
@@ -105,11 +151,8 @@ pub fn __contains_function_pointer(type_id: &TypeId) -> bool {
 }
 
 #[doc(hidden)]
-pub fn __insert_function_pointer(
-    type_id: TypeId,
-    fp: __FactoryFn,
-) {
+pub fn __insert_function_pointer(type_id: TypeId, entry: __FactoryEntry) {
     // Todo Arc:pin(fp)
     let mut map = __STRUCT_REGISTRY.lock().unwrap();
-    map.insert(type_id, Arc::new(fp));
+    map.insert(type_id, entry);
 }

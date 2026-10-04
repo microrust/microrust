@@ -20,7 +20,15 @@ struct __TraitBridge<T: ?Sized> {
 /// `TypeId` so heterogeneous traits can share one map.
 type __Bridge = Arc<dyn Any + Send + Sync>;
 
-static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, __Bridge>>> =
+/// A registered trait binding: the erased bridge plus the name to report it
+/// under. The registry is keyed by `TypeId`, so without a captured name the
+/// trait would be unprintable once registered.
+pub(crate) struct __TraitEntry {
+    pub name: &'static str,
+    pub bridge: __Bridge,
+}
+
+pub(crate) static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, __TraitEntry>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Registers `resolve` as the way to obtain an `Arc<T>` for trait `T`.
@@ -47,7 +55,10 @@ where
 
     map.insert(
         type_id_trait,
-        Arc::new(__TraitBridge::<T> { resolve }) as __Bridge,
+        __TraitEntry {
+            name: type_name::<T>(),
+            bridge: Arc::new(__TraitBridge::<T> { resolve }) as __Bridge,
+        },
     );
 }
 
@@ -68,10 +79,10 @@ pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
     // registry, so the trait lock must not be held across the call.
     let bridge: __Bridge = {
         let map = __TRAIT_REGISTRY.lock().unwrap();
-        let bridge = map
+        let entry = map
             .get(&type_id_trait)
             .expect("no implementation is registered for this trait");
-        Arc::clone(bridge)
+        Arc::clone(&entry.bridge)
     };
 
     let resolve = bridge

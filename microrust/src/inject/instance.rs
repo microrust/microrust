@@ -5,7 +5,10 @@ use std::{
 };
 use tracing::{debug, instrument};
 
-pub use crate::inject::structs::{__InstanceFactory, __get_function_pointer};
+use crate::inject::{
+    report::__assert_no_cycles,
+    structs::{__InstanceFactory, __factory_entry},
+};
 
 type __AnyArc = Arc<dyn Any + Send + Sync>;
 type __AnyCell = Arc<OnceLock<__AnyArc>>;
@@ -23,6 +26,8 @@ fn __instance_cell(type_id: TypeId) -> __AnyCell {
 pub fn __get_instance_by_typeid(type_id: TypeId) -> __AnyArc {
     debug!("__get_instance_by_typeid() called for {:?}", type_id);
 
+    __assert_no_cycles();
+
     let cell = __instance_cell(type_id);
     if let Some(inst) = cell.get() {
         debug!("singleton instance found for {:?}", type_id);
@@ -32,7 +37,7 @@ pub fn __get_instance_by_typeid(type_id: TypeId) -> __AnyArc {
     let inst = Arc::clone(
         cell.get_or_init(|| {
             debug!("creating singleton instance for {:?}", type_id);
-            __get_function_pointer(type_id)()
+            (__factory_entry(type_id).factory)()
         }),
     );
 
