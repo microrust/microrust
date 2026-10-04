@@ -12,9 +12,6 @@ static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, TypeId>>> =
     LazyLock::new(|| Mutex::new(HashMap::<_, _>::new()));
 
 #[doc(hidden)]
-pub trait __FakeTrait: Send + Sync {}
-
-#[doc(hidden)]
 pub fn __collect_trait<
     T: Send + Sync + ?Sized + 'static,
     U: __InstanceFactory + Send + Sync + 'static,
@@ -78,22 +75,4 @@ pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
     debug!("Output Trait Ref: {:p}", &(*casted));
 
     casted
-}
-
-#[instrument]
-pub fn set_fake_trait_instance<
-    T: Send + Sync + ?Sized + 'static,
-    U: __FakeTrait + __InstanceFactory + Send + Sync + 'static,
->() {
-    debug!("set_fake_trait_instance() called");
-
-    let type_id_trait = TypeId::of::<T>();
-    debug!("Input Trait TypeName: {:#}", type_name::<T>());
-    debug!("Input Trait TypeId: {:?}", type_id_trait);
-
-    let type_id_struct = TypeId::of::<U>();
-    debug!("Input Struct TypeName: {:#}", type_name::<U>());
-    debug!("Input Struct TypeId: {:?}", type_id_struct);
-
-    __insert_trait(type_id_trait, type_id_struct);
 }

@@ -10,7 +10,7 @@ use crate::{
             set_fake_function_impl,
         },
         singleton::inject_singleton_impl,
-        traits::{inject_fake_trait_impl, inject_trait_impl},
+        traits::inject_trait_impl,
     },
 };
 extern crate proc_macro;
@@ -49,14 +49,6 @@ pub fn inject_trait(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     inject_trait_impl(_args, input)
-}
-
-#[proc_macro_attribute]
-pub fn inject_fake_trait(
-    _args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    inject_fake_trait_impl(_args, input)
 }
 
 #[doc(hidden)]
