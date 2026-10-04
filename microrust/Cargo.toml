@@ -27,3 +27,9 @@ tracing-test = { workspace = true, features = ["no-env-filter"] }
 [[test]]
 name = "cycle_test"
 path = "tests/inject/cycle_test.rs"
+
+# Own target: two structs deliberately claim the same trait, and
+# `report_registrations()` is expected to abort on it.
+[[test]]
+name = "trait_collision_test"
+path = "tests/inject/trait_collision_test.rs"

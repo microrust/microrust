@@ -12,7 +12,7 @@ use tracing::debug;
 use crate::inject::{
     function::__FUNCTION_REGISTRY,
     structs::{__DepNode, __STRUCT_DEPS, __STRUCT_REGISTRY},
-    traits::__TRAIT_REGISTRY,
+    traits::{__TRAIT_COLLISIONS, __TRAIT_REGISTRY},
 };
 
 /// Panics with every detected cycle, used by both [`report_registrations`] and
@@ -32,6 +32,33 @@ fn __fail_on_cycles(context: &str) -> Vec<Vec<&'static str>> {
         "[microrust] {} dependency cycle(s) detected in the injection graph: {}",
         context,
         rendered.join("; ")
+    );
+}
+
+/// Panics with every ambiguous trait binding.
+///
+/// Mirrors the cycle check: the clash is recorded during `ctor` registration and
+/// raised here, because nothing observed at registration time would be seen.
+fn __fail_on_trait_collisions() {
+    let collisions = __TRAIT_COLLISIONS.lock().unwrap();
+    if collisions.is_empty() {
+        return;
+    }
+
+    let rendered: Vec<String> = collisions
+        .iter()
+        .map(|collision| {
+            format!(
+                "{} is implemented by both {} and {}",
+                collision.trait_name, collision.first_impl, collision.second_impl,
+            )
+        })
+        .collect();
+
+    panic!(
+        "[microrust] found {} ambiguous trait binding(s): {}",
+        rendered.len(),
+        rendered.join("; "),
     );
 }
 
@@ -101,10 +128,17 @@ fn __find_cycles(graph: &DiGraph<__DepNode, ()>) -> Vec<Vec<&'static str>> {
 ///
 /// # Panics
 ///
-/// Panics if the injection graph contains a dependency cycle. A cycle is a
-/// static wiring error, not a runtime condition: resolving it would re-enter a
-/// `OnceLock` that is still initializing and deadlock rather than fail, so it
-/// is reported up front with the offending types named.
+/// Panics if the injection graph contains a dependency cycle, or if a trait is
+/// implemented by more than one struct. Both are static wiring errors rather
+/// than runtime conditions. A cycle would re-enter a `OnceLock` that is still
+/// initializing and deadlock rather than fail; an ambiguous trait silently
+/// resolves to whichever struct's `ctor` ran first, and `ctor` order across
+/// crates is unspecified, so the winner is not even stable between builds. Both
+/// are therefore reported up front with the offending types named.
+///
+/// A cycle is additionally caught on the first `get_instance()` in a process,
+/// since that would otherwise deadlock. Ambiguous traits are not, so an
+/// application that never calls this function can still resolve one silently.
 pub fn report_registrations() {
     let structs = __STRUCT_REGISTRY.lock().unwrap();
     let mut struct_names: Vec<&'static str> = structs.values().map(|entry| entry.name).collect();
@@ -146,6 +180,7 @@ pub fn report_registrations() {
     debug!("[microrust] {edge_count} dependency edge(s)");
 
     __fail_on_cycles("found");
+    __fail_on_trait_collisions();
 }
 
 /// First-resolution guard against an undeclared cycle.

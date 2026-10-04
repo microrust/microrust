@@ -3,7 +3,7 @@ use std::{
     collections::HashMap,
     sync::{Arc, LazyLock, Mutex},
 };
-use tracing::{debug, instrument};
+use tracing::{debug, instrument, warn};
 
 /// Erased resolver for a single trait.
 ///
@@ -20,13 +20,29 @@ struct __TraitBridge<T: ?Sized> {
 /// `TypeId` so heterogeneous traits can share one map.
 type __Bridge = Arc<dyn Any + Send + Sync>;
 
-/// A registered trait binding: the erased bridge plus the name to report it
-/// under. The registry is keyed by `TypeId`, so without a captured name the
-/// trait would be unprintable once registered.
+/// A registered trait binding: the erased bridge plus the names to report it
+/// under. The registry is keyed by `TypeId`, so without captured names the
+/// binding would be unprintable once registered.
 pub(crate) struct __TraitEntry {
     pub name: &'static str,
+    pub impl_name: &'static str,
     pub bridge: __Bridge,
 }
+
+/// A trait claimed by more than one struct.
+///
+/// Recorded rather than rejected at registration: `ctor` functions run before
+/// `main` with no `tracing` subscriber installed, so nothing said here would be
+/// seen. [`report_registrations`](crate::inject::report_registrations) raises
+/// these alongside dependency cycles, once a subscriber is listening.
+pub(crate) struct __TraitCollision {
+    pub trait_name: &'static str,
+    pub first_impl: &'static str,
+    pub second_impl: &'static str,
+}
+
+pub(crate) static __TRAIT_COLLISIONS: LazyLock<Mutex<Vec<__TraitCollision>>> =
+    LazyLock::new(|| Mutex::new(Vec::new()));
 
 pub(crate) static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, __TraitEntry>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -35,9 +51,14 @@ pub(crate) static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, __TraitEntry>
 ///
 /// `resolve` must return `get_instance::<U>()` coerced to `Arc<T>` for the
 /// struct `U` that implements `T`, so both views share one instance.
+/// `impl_name` is `U`'s name, used to report an ambiguous binding.
 /// Emitted by `#[inject_trait]` and run once at startup.
+///
+/// If a second struct implements the same trait, the first registration is kept
+/// and the clash is recorded. There is no qualification syntax yet, so every
+/// such clash is a wiring mistake rather than an intentional override.
 #[doc(hidden)]
-pub fn __collect_trait<T>(resolve: fn() -> Arc<T>)
+pub fn __collect_trait<T>(impl_name: &'static str, resolve: fn() -> Arc<T>)
 where
     T: Send + Sync + ?Sized + 'static,
 {
@@ -45,21 +66,48 @@ where
 
     let type_id_trait = TypeId::of::<T>();
 
-    // TODO: throw error, if multiple struct implement the same trait
-    // exception: they are qualified?
-    let mut map = __TRAIT_REGISTRY.lock().unwrap();
-    if map.contains_key(&type_id_trait) {
-        debug!("trait allready collected");
-        return;
-    }
+    // The registry lock is released before recording a collision so the two
+    // mutexes are never held at once.
+    let colliding_with = {
+        let mut map = __TRAIT_REGISTRY.lock().unwrap();
+        match map.get(&type_id_trait) {
+            Some(existing) => Some(existing.impl_name),
+            None => {
+                map.insert(
+                    type_id_trait,
+                    __TraitEntry {
+                        name: type_name::<T>(),
+                        impl_name,
+                        bridge: Arc::new(__TraitBridge::<T> { resolve }) as __Bridge,
+                    },
+                );
+                None
+            }
+        }
+    };
 
-    map.insert(
-        type_id_trait,
-        __TraitEntry {
-            name: type_name::<T>(),
-            bridge: Arc::new(__TraitBridge::<T> { resolve }) as __Bridge,
-        },
+    if let Some(first_impl) = colliding_with {
+        __record_trait_collision(__TraitCollision {
+            trait_name: type_name::<T>(),
+            first_impl,
+            second_impl: impl_name,
+        });
+    }
+}
+
+fn __record_trait_collision(collision: __TraitCollision) {
+    // Discarded in the `ctor` phase for the reason given on
+    // `__TRAIT_COLLISIONS`; kept so the clash is still visible if registration
+    // ever moves to runtime.
+    warn!(
+        "trait {} is implemented by both {} and {}; only the first is reachable \
+         through the trait",
+        collision.trait_name,
+        collision.first_impl,
+        collision.second_impl,
     );
+
+    __TRAIT_COLLISIONS.lock().unwrap().push(collision);
 }
 
 #[doc(hidden)]

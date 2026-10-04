@@ -172,10 +172,27 @@ front with the offending types named:
     cycle_test::CycleA -> cycle_test::CycleB -> cycle_test::CycleA
 ```
 
-`report_registrations()` panics in that case, so call it during startup rather
+### Ambiguous trait bindings
+
+If two structs `#[inject_trait]` the same trait, the first registration wins and
+the clash is reported:
+
+```text
+[microrust] found 1 ambiguous trait binding(s):
+    dyn trait_collision_test::SharedRepo is implemented by both
+    trait_collision_test::BetaRepo and trait_collision_test::AlphaRepo
+```
+
+Which struct wins is **not a stable contract**: `#[ctor]` ordering across crates
+is unspecified, so the resolved instance can differ between builds of the same
+source. There is no qualification syntax yet, so treat every such clash as a
+wiring mistake rather than an override.
+
+`report_registrations()` panics in both cases, so call it during startup rather
 than on a request path. `microrust::inject::dependency_cycles()` returns the
-same information as data if you would rather inspect it yourself.
+cycle information as data if you would rather inspect it yourself.
 
 As a safety net for applications that never call `report_registrations()`, the
-first `get_instance()` in a process performs the same check and fails with the
-same message instead of deadlocking.
+first `get_instance()` in a process performs the cycle check and fails with the
+same message instead of deadlocking. Ambiguous traits have no such net: an
+application that skips the report can still resolve one silently.
