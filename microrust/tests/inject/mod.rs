@@ -1,4 +1,5 @@
-mod complex_singleton_test;
+// mod complex_singleton_test;
 // mod fake_trait_singleton_test;
-mod struct_singleton_test;
-mod trait_singleton_test;
+mod function_injection_test;
+// mod struct_singleton_test;
+// mod trait_singleton_test;

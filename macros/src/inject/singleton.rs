@@ -1,63 +1,9 @@
 use crate::error::macro_error;
+use crate::inject::dep::classify_dep;
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::{format_ident, quote};
-use syn::{
-    FnArg, GenericArgument, ItemImpl, Pat, PathArguments, Type, TypeParamBound, parse_macro_input,
-};
-
-/// A single constructor dependency, already stripped of its `Arc<..>` wrapper.
-struct Dep {
-    /// The injected type, e.g. `MyStruct` or `dyn MyTrait`.
-    ty: Type,
-    /// Whether the dependency is a trait object and must go through
-    /// `get_trait_instance` rather than `get_instance`.
-    is_trait: bool,
-}
-
-/// Unwraps `Arc<Inner>` and reports whether `Inner` is a trait object.
-///
-/// Accepts `Arc`, `std::sync::Arc` and `core::sync::Arc` alike, since only the
-/// final path segment is inspected.
-fn classify_dep(ty: &Type) -> Option<Dep> {
-    let Type::Path(type_path) = ty else {
-        return None;
-    };
-    let outer = type_path.path.segments.last()?;
-    if outer.ident != "Arc" {
-        return None;
-    }
-    let PathArguments::AngleBracketed(args) = &outer.arguments else {
-        return None;
-    };
-    let GenericArgument::Type(inner) = args.args.first()? else {
-        return None;
-    };
-
-    match inner {
-        Type::Path(_) => Some(Dep {
-            ty: inner.clone(),
-            is_trait: false,
-        }),
-        Type::TraitObject(obj) => {
-            // Require exactly one non-auto-trait bound so the emitted turbofish
-            // is always a well-formed `dyn Trait`.
-            let mut traits = obj.bounds.iter().filter_map(|bound| match bound {
-                TypeParamBound::Trait(trait_bound) => Some(&trait_bound.path),
-                _ => None,
-            });
-            let trait_path = traits.next()?;
-            if traits.next().is_some() || trait_path.segments.is_empty() {
-                return None;
-            }
-            Some(Dep {
-                ty: inner.clone(),
-                is_trait: true,
-            })
-        }
-        _ => None,
-    }
-}
+use syn::{FnArg, ItemImpl, Pat, parse_macro_input};
 
 pub fn inject_singleton_impl(
     args: proc_macro::TokenStream,
