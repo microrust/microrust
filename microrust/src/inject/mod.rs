@@ -5,7 +5,6 @@ mod structs;
 mod traits;
 
 // re-exports
-pub use crosstrait::register;
 pub use error::{InjectError, InjectResult};
 pub use function::{__register_function, get_function_ptr, set_function_ptr};
 pub use instance::get_instance;

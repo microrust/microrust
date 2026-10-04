@@ -13,7 +13,6 @@ edition = "2024"
 microrust_macros = { version = "0.0.0-alpha.11", path = "macros" }
 
 async-trait = "0.1.92"
-crosstrait = "0.1.4"
 ctor = "1.0.13"
 petgraph = "0.8.3"
 proc-macro2 = "1.0.107"

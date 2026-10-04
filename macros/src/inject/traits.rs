@@ -32,13 +32,21 @@ pub fn inject_trait_impl(
 
     let ctor_ident = format_ident!("ctor_{}_{}", trait_ident, struct_ident);
 
+    // The coercion from `Arc<Struct>` to `Arc<dyn Trait>` is only provable
+    // here, where both concrete types are in scope, so the resolver is built
+    // at the impl site and handed over as a plain `fn` pointer.
     let tokens = quote! {
     #[::microrust::__private::async_trait]
     #input
 
-    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_path, #self_path>();});
-
-    ::microrust::inject::register! { #self_path => dyn #trait_path }
+    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {
+        ::microrust::inject::__collect_trait::<dyn #trait_path>(|| {
+            let inst: ::std::sync::Arc<#self_path> =
+                ::microrust::inject::get_instance::<#self_path>();
+            let as_trait: ::std::sync::Arc<dyn #trait_path> = inst;
+            as_trait
+        });
+    });
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

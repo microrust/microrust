@@ -12,7 +12,6 @@ edition.workspace = true
 microrust_macros = { workspace = true }
 
 async-trait = { workspace = true }
-crosstrait = { workspace = true }
 ctor = { workspace = true }
 petgraph = { workspace = true }
 thiserror = { workspace = true }
