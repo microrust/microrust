@@ -2,3 +2,8 @@
 /.zed
 
 .DS_Store
+
+# Cargo resolves the whole workspace from the root lockfile; a nested one is
+# inert and only causes the two to disagree.
+/microrust/Cargo.lock
+/macros/Cargo.lock

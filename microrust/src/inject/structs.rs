@@ -60,7 +60,7 @@ pub fn __collect_struct<T: __InstanceFactory + Send + Sync + 'static>() {
     debug!("Struct TypeId: {:?}", type_id_struct);
 
     if __contains_function_pointer(&type_id_struct) {
-        debug!("struct allready collected");
+        debug!("struct already collected");
         return;
     }
 
@@ -152,7 +152,6 @@ pub fn __contains_function_pointer(type_id: &TypeId) -> bool {
 
 #[doc(hidden)]
 pub fn __insert_function_pointer(type_id: TypeId, entry: __FactoryEntry) {
-    // Todo Arc:pin(fp)
     let mut map = __STRUCT_REGISTRY.lock().unwrap();
     map.insert(type_id, entry);
 }

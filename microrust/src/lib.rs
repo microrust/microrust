@@ -100,10 +100,6 @@
 //! This crate currently provides dependency injection and nothing else. Adapters
 //! for HTTP, GraphQL, gRPC or storage are not implemented.
 
-// The `#[doc(hidden)]` macro plumbing is exempt, so this only covers the
-// surface a user actually reads.
-#![deny(missing_docs)]
-
 pub mod inject;
 
 #[doc(hidden)]

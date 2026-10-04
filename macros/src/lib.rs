@@ -27,6 +27,12 @@ extern crate proc_macro;
 
 // core
 
+/// Runs `main` on a multi-threaded Tokio runtime.
+///
+/// ```ignore
+/// #[microrust::main]
+/// async fn main() { /* ... */ }
+/// ```
 #[proc_macro_attribute]
 pub fn main(
     args: proc_macro::TokenStream,
@@ -35,6 +41,12 @@ pub fn main(
     core_runtime_main_impl(args, input)
 }
 
+/// Runs a test body on a single-threaded Tokio runtime.
+///
+/// ```ignore
+/// #[microrust::test]
+/// async fn my_test() { /* ... */ }
+/// ```
 #[proc_macro_attribute]
 pub fn test(
     args: proc_macro::TokenStream,
@@ -45,6 +57,23 @@ pub fn test(
 
 // inject
 
+/// Registers the `impl` block's named associated function as the constructor
+/// for a singleton.
+///
+/// ```ignore
+/// #[microrust::singleton(new)]
+/// impl Repo {
+///     fn new(config: Arc<Config>) -> Self { /* ... */ }
+/// }
+/// ```
+///
+/// Every `Arc<...>` constructor parameter is injected; the struct is built
+/// lazily on the first `get_instance::<Self>()`.
+///
+/// # Errors
+///
+/// Emits a `compile_error!` if the attribute does not take exactly one argument,
+/// or is applied to a trait `impl` (that is [`inject_trait`]'s job).
 #[proc_macro_attribute]
 pub fn singleton(
     args: proc_macro::TokenStream,
@@ -53,6 +82,22 @@ pub fn singleton(
     inject_singleton_impl(args, input)
 }
 
+/// Binds a struct as the implementation of a trait, so it can be requested as
+/// `Arc<dyn Trait>`.
+///
+/// ```ignore
+/// #[microrust::inject_trait]
+/// impl UserRepo for PostgresRepo {
+///     /* ... */
+/// }
+/// ```
+///
+/// Applies `#[async_trait]` to the `impl` itself, so the trait needs no
+/// `Cargo.toml` entry for `async-trait`.
+///
+/// # Errors
+///
+/// Emits a `compile_error!` if applied to anything other than a trait `impl`.
 #[proc_macro_attribute]
 pub fn inject_trait(
     _args: proc_macro::TokenStream,
