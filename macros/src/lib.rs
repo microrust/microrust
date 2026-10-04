@@ -1,3 +1,13 @@
+//! Procedural macros for [`microrust`](https://docs.rs/microrust).
+//!
+//! These are re-exported by the `microrust` crate and are not meant to be
+//! depended on directly: the generated code resolves its helpers through
+//! `microrust`, so using it adds no transitive dependencies of its own.
+//!
+//! Every macro reports misuse as a `compile_error!` rather than panicking, so a
+//! mistake surfaces as a normal compiler diagnostic with a span instead of an
+//! opaque "custom attribute panicked".
+
 mod core;
 mod error;
 mod inject;

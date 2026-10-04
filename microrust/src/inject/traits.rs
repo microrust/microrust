@@ -116,6 +116,34 @@ pub fn __contains_trait(type_id_trait: &TypeId) -> bool {
     map.contains_key(type_id_trait)
 }
 
+/// Returns the instance bound to trait `T`, as `Arc<T>`.
+///
+/// `T` is normally a `dyn Trait`. The binding comes from a `#[inject_trait]`
+/// attribute on the implementing `impl` block, and resolution goes through that
+/// struct's own singleton, so the trait view and the struct view of the same
+/// object are the same allocation:
+///
+/// ```no_run
+/// use microrust::inject::get_trait_instance;
+///
+/// # #[async_trait::async_trait]
+/// # trait UserRepo: Send + Sync { fn find(&self, id: u32) -> Option<String>; }
+/// let repo = get_trait_instance::<dyn UserRepo>();
+/// ```
+///
+/// # Panics
+///
+/// Panics if no `#[inject_trait]` implementation is registered for `T`.
+///
+/// Panics if more than one struct implements `T`: the first registration is
+/// kept, and which one is first is not stable, because `#[ctor]` ordering across
+/// crates is unspecified. Unlike a cycle this is not caught here, so an
+/// application that never calls
+/// [`report_registrations`](crate::inject::report_registrations) can still
+/// resolve an arbitrary implementation.
+///
+/// Panics transitively through [`get_instance`](crate::inject::get_instance)
+/// for a missing singleton registration or a dependency cycle.
 #[instrument]
 pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
     debug!("get_trait_instance() called");

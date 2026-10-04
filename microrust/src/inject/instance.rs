@@ -45,6 +45,37 @@ pub fn __get_instance_by_typeid(type_id: TypeId) -> __AnyArc {
     inst
 }
 
+/// Returns the process-wide instance of `T`, constructing it on first request.
+///
+/// `T` must carry a `#[singleton]` attribute naming its constructor; the
+/// constructor's own `Arc<...>` parameters are resolved recursively, so a graph
+/// of singletons can be requested from any depth. Every call returns the same
+/// allocation.
+///
+/// ```no_run
+/// use microrust::inject::get_instance;
+///
+/// # struct Config;
+/// # #[microrust::inject::singleton(new)]
+/// # impl Config {
+/// #     fn new() -> Self {
+/// #         Self
+/// #     }
+/// # }
+/// let config = get_instance::<Config>();
+/// ```
+///
+/// # Panics
+///
+/// Panics if `T` has no `#[singleton]` registration, which means the type was
+/// never wired into the container. Registration is emitted by the macro into a
+/// `#[ctor]` function, so this only happens for a type the container has never
+/// heard of.
+///
+/// Panics if the injection graph contains a dependency cycle. A cycle would
+/// otherwise re-enter a `OnceLock` that is still initializing and deadlock
+/// rather than fail; the check is why it surfaces as a message naming the
+/// offending types. See [`report_registrations`](crate::inject::report_registrations).
 #[instrument]
 pub fn get_instance<T: __InstanceFactory + Send + Sync + 'static>() -> Arc<T> {
     debug!("get_instance() called");

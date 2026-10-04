@@ -1,3 +1,22 @@
+//! Dependency injection: singleton structs, trait bindings, and injectable
+//! functions.
+//!
+//! Three registries back this module, all process-global and keyed differently
+//! because the three kinds of dependency have different identities:
+//!
+//! | Dependency | Key | Resolved by |
+//! |---|---|---|
+//! | struct | `TypeId` | [`get_instance`] |
+//! | trait | `TypeId` of `dyn Trait` | [`get_trait_instance`] |
+//! | function | `module_path!() + name` | [`get_function!`] |
+//!
+//! Registration happens in `#[ctor]` functions emitted by [`singleton`],
+//! [`inject_trait`] and [`inject_fn`]; resolution happens on first request.
+//! Nothing is constructed during registration.
+//!
+//! [`report_registrations`] logs what was registered and fails on a dependency
+//! cycle or an ambiguous trait binding.
+
 mod error;
 mod function;
 mod instance;
