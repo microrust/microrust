@@ -1,0 +1,13 @@
+# Read from the workspace root, so a bare `cargo nextest run` behaves the same in
+# a terminal, under bacon, and in a future CI job.
+
+[profile.default]
+# `#[traced_test]` writes to stdout, which nextest captures per test and hides
+# unless asked. Without this the DI registry diagnostics are invisible for
+# passing tests, which is what `cargo test -- --show-output` used to reveal.
+success-output = "final"
+
+# A failure here is real. Auto-retry would mask exactly the kind of cross-test
+# interference this crate already had to design out (see commit cb1bdcb,
+# "Make tests thread safe").
+retries = 0

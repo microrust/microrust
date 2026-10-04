@@ -1,16 +1,21 @@
 default_job = "test"
 env.CARGO_TERM_COLOR = "always"
 
+# nextest runs each test in its own process, so the process-global singleton and
+# function registries cannot leak between tests.
+#
+# Doctests live in a separate job because nextest has no doctest support, and
+# `lib.rs` carries the only executable documentation in the crate.
 [jobs.test]
-command = ["cargo", "test", "--tests", "--", "--show-output"]
+command = ["cargo", "nextest", "run"]
+analyzer = "nextest"
 env.RUST_LOG = "debug"
 need_stdout = true
 allow_warnings = true
 on_success = "scroll-to-bottom"
 
-[jobs.test-not-parallel]
-command = ["cargo", "test", "--tests", "--", "--show-output", "--test-threads=1"]
-env.RUST_LOG = "debug"
+[jobs.doc-test]
+command = ["cargo", "test", "--doc"]
 need_stdout = true
 allow_warnings = true
 on_success = "scroll-to-bottom"
@@ -22,3 +27,6 @@ need_stdout = false
 [jobs.clippy]
 command = ["cargo", "clippy"]
 need_stdout = false
+
+[keybindings]
+shift-d = "job:doc-test"
