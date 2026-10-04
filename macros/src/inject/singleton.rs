@@ -19,10 +19,17 @@ pub fn inject_singleton_impl(
         return macro_error("Please use attribute macro #[inject_trait]");
     }
 
-    let struct_ident = match &*input.self_ty {
-        syn::Type::Path(type_path) => type_path.path.segments.first().unwrap().ident.clone(),
-        _ => return macro_error("Expecting: impl <type>"),
+    // Keep the whole `self_ty` path for codegen: emitting only the final
+    // segment loses the module qualification and breaks when the type is not
+    // in scope under its bare name.
+    let syn::Type::Path(self_path) = &*input.self_ty else {
+        return macro_error("Expecting: impl <type>");
     };
+    let Some(last_segment) = self_path.path.segments.last() else {
+        return macro_error("Expecting: impl <type>");
+    };
+    // Generated `ctor_*` fn names must stay a bare identifier.
+    let struct_ident = last_segment.ident.clone();
 
     let constructor_fn = input.items.iter().find_map(|item| match item {
         syn::ImplItem::Fn(func) if func.sig.ident == constructor_ident => Some(func),
@@ -94,9 +101,9 @@ pub fn inject_singleton_impl(
             .map(|dep| {
                 let ty = &dep.ty;
                 if dep.is_trait {
-                    quote! { ::microrust::inject::__collect_trait_deps::<#struct_ident, #ty>(); }
+                    quote! { ::microrust::inject::__collect_trait_deps::<#self_path, #ty>(); }
                 } else {
-                    quote! { ::microrust::inject::__collect_struct_deps::<#struct_ident, #ty>(); }
+                    quote! { ::microrust::inject::__collect_struct_deps::<#self_path, #ty>(); }
                 }
             })
             .collect();
@@ -111,7 +118,7 @@ pub fn inject_singleton_impl(
     let tokens = quote! {
     #input
 
-    impl ::microrust::inject::__InstanceFactory for #struct_ident {
+    impl ::microrust::inject::__InstanceFactory for #self_path {
         fn __create_instance() -> ::std::sync::Arc<dyn ::std::any::Any + Send + Sync> {
             ::microrust::__private::tracing::debug!(
                 "__InstanceFactory::__create_instance() called for {}",
@@ -120,13 +127,13 @@ pub fn inject_singleton_impl(
 
             #(#resolve_args)*
 
-            let inst = ::std::sync::Arc::new(#struct_ident::#constructor_ident(#(#ctor_args),*));
+            let inst = ::std::sync::Arc::new(#self_path::#constructor_ident(#(#ctor_args),*));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
             inst_any
         }
     }
 
-    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#struct_ident>();});
+    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#self_path>();});
     #deps_ctor
     };
     TokenStream::from(tokens)

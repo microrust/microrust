@@ -9,17 +9,26 @@ pub fn inject_trait_impl(
 ) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as ItemImpl);
     // println!("{:#?}", input);
-    if input.trait_.is_none() {
+
+    // Both paths are kept whole for codegen; `get_ident()` would reject any
+    // module-qualified path, and taking only the final segment of `self_ty`
+    // would lose the qualification.
+    let Some((trait_path, _)) = &input.trait_ else {
         return macro_error("Expecting: impl <trait> for <type>");
-    }
-
-    let trait_ = input.trait_.clone().unwrap();
-    let trait_ident = trait_.0.get_ident().unwrap();
-
-    let struct_ident = match &*input.self_ty {
-        syn::Type::Path(type_path) => type_path.path.segments.first().unwrap().ident.clone(),
-        _ => panic!("Expecting: impl <trait> for <type>"),
     };
+    let Some(last_trait_segment) = trait_path.segments.last() else {
+        return macro_error("Expecting: impl <trait> for <type>");
+    };
+    let syn::Type::Path(self_path) = &*input.self_ty else {
+        return macro_error("Expecting: impl <trait> for <type>");
+    };
+    let Some(last_struct_segment) = self_path.path.segments.last() else {
+        return macro_error("Expecting: impl <trait> for <type>");
+    };
+
+    // Generated `ctor_*` fn names must stay a bare identifier.
+    let trait_ident = last_trait_segment.ident.clone();
+    let struct_ident = last_struct_segment.ident.clone();
 
     let ctor_ident = format_ident!("ctor_{}_{}", trait_ident, struct_ident);
 
@@ -27,9 +36,9 @@ pub fn inject_trait_impl(
     #[::microrust::__private::async_trait]
     #input
 
-    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_ident, #struct_ident>();});
+    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_trait::<dyn #trait_path, #self_path>();});
 
-    ::microrust::inject::register! { #struct_ident => dyn #trait_ident }
+    ::microrust::inject::register! { #self_path => dyn #trait_path }
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)
