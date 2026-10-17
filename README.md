@@ -11,7 +11,9 @@ A modern rust application framework, asynchronous and with batteries included.
 ## Features
 * Dependency Injection
 
-## Inbound Adapter (Server)
+## Planned Features
+
+### Inbound Adapter (Server)
 - REST / JSON
   - Topcoat
 - HTML WebApp
@@ -21,7 +23,7 @@ A modern rust application framework, asynchronous and with batteries included.
 - Message Subscription
 - MCP
 
-## Outbound Adapter (Client)
+### Outbound Adapter (Client)
 - Relational Database
   - Toasty
 - Document Database
