@@ -39,7 +39,6 @@ A modern rust application framework, asynchronous and with batteries included.
 ## Docs
 
 - [Documentation](docs/README.md)
-- https://docs.rs/microrust/latest/microrust/
 
 ## Layers and Dependency Inversion
 
