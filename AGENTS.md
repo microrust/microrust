@@ -13,7 +13,7 @@ Workspace (edition 2024, resolver 3, Rust stable):
 | Crate | Path | Role |
 |---|---|---|
 | `microrust` | `microrust/` | Runtime: registries, resolution, diagnostics. Re-exports the macros. |
-| `microrust_macros` | `macros/` | Proc macros: `#[singleton]`, `#[inject_trait]`, `#[inject_fn]`, `get_function!`, `set_fake_*!`, `#[main]`, `#[test]`. |
+| `microrust_macros` | `macros/` | Proc macros: `#[singleton]`, `#[inject_trait]`, `#[main]`, `#[test]`. |
 
 Users depend only on `microrust`. The macros crate is an implementation detail.
 
@@ -48,14 +48,13 @@ macro-generated items.
 
 ## Architecture in one screen
 
-Three process-global registries, all `LazyLock<Mutex<…>>`, filled by `#[ctor]`
+Two process-global registries, both `LazyLock<Mutex<…>>`, filled by `#[ctor]`
 functions that run **before `main`**:
 
 | Kind | Key | Registered by | Resolved by |
 |---|---|---|---|
 | struct | `TypeId::of::<S>()` | `#[singleton(ctor)]` → `__collect_struct` | `get_instance::<S>()` |
 | trait | `TypeId::of::<dyn T>()` | `#[inject_trait]` → `__collect_trait` | `get_trait_instance::<dyn T>()` |
-| function | `module_path!() :: name` | `#[inject_fn]` → `__register_function` | `get_function!(name)` |
 
 - Singletons are lazy: `inject/instance.rs` keeps a `TypeId → Arc<OnceLock>`
   map. Every resolution returns the same `Arc`.
@@ -83,9 +82,6 @@ functions that run **before `main`**:
 - Keep the **full** `self_ty` / trait path when generating code; use the last
   segment only to build identifiers (`ctor_<Name>`). `module_path_test.rs` is
   the regression test for this.
-- The `__MicrorustFn_*` / `__microrust_boxed_*` / `__microrust_ctor_fn_*` names
-  are built only in `fn_idents()`. `inject_fn`, `get_function!` and `set_fake_*!`
-  must agree, so change them there and nowhere else.
 - Injected parameters are recognized only as `Arc<Struct>` or `Arc<dyn Trait>`
   (`inject/dep.rs::classify_dep`). Extend that function rather than
   pattern-matching types elsewhere.
@@ -101,9 +97,8 @@ functions that run **before `main`**:
 - Never take two registry locks at once.
 - Don't panic inside a `Once::call_once` body (it poisons the `Once`). Record
   the verdict and panic outside (see `__assert_no_cycles`).
-- Struct/trait lookup failures panic by design. Only the function registry
-  returns `InjectError`. Keep it that way unless the API is deliberately
-  redesigned.
+- Struct/trait lookup failures panic by design. Keep it that way unless the
+  API is deliberately redesigned.
 
 ## Tests
 
@@ -111,8 +106,7 @@ functions that run **before `main`**:
   because the identity assertions depend on the shared registries.
 - Fixtures that *intentionally* break the global graph (cycles, trait
   collisions) get their own `[[test]]` target in `microrust/Cargo.toml`. Do the
-  same for any new fixture that would poison the shared binary, including
-  anything that calls `set_fake_*!` (mocks are global and have no reset).
+  same for any new fixture that would poison the shared binary.
 - Use `#[traced_test]` (from `tracing-test`) so registry diagnostics show up in
   nextest output.
 - Panicking behaviour is tested with `#[should_panic(expected = "…")]`. Keep

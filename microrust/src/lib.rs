@@ -40,8 +40,7 @@
 //! assert_eq!(repo.find(7).as_deref(), Some("user-7"));
 //! ```
 //!
-//! **By struct.** A singleton's constructor parameters are injected directly,
-//! and a free function can request its own dependencies with `#[inject_fn]`.
+//! **By struct.** A singleton's constructor parameters are injected directly.
 //! No traits needed.
 //!
 //! ```

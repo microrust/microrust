@@ -10,7 +10,6 @@ use petgraph::{
 use tracing::debug;
 
 use crate::inject::{
-    function::__FUNCTION_REGISTRY,
     structs::{__DepNode, __STRUCT_DEPS, __STRUCT_REGISTRY},
     traits::{__TRAIT_COLLISIONS, __TRAIT_REGISTRY},
 };
@@ -153,15 +152,6 @@ pub fn report_registrations() {
     let trait_count = trait_names.len();
     drop(traits);
 
-    let functions = __FUNCTION_REGISTRY.lock().unwrap();
-    let mut function_names: Vec<(String, &'static str)> = functions
-        .iter()
-        .map(|(key, entry)| (key.clone(), entry.sig_name))
-        .collect();
-    function_names.sort_unstable();
-    let function_count = function_names.len();
-    drop(functions);
-
     debug!("[microrust] registered {struct_count} struct(s)");
     for name in struct_names {
         debug!("[microrust]   struct    {name}");
@@ -170,11 +160,6 @@ pub fn report_registrations() {
     debug!("[microrust] registered {trait_count} trait binding(s)");
     for name in trait_names {
         debug!("[microrust]   trait     {name}");
-    }
-
-    debug!("[microrust] registered {function_count} injectable function(s)");
-    for (key, sig_name) in function_names {
-        debug!("[microrust]   fn        {key} :: {sig_name}");
     }
 
     debug!("[microrust] {edge_count} dependency edge(s)");

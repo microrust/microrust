@@ -17,7 +17,6 @@ microrust_macros = { workspace = true }
 async-trait = { workspace = true }
 ctor = { workspace = true }
 petgraph = { workspace = true }
-thiserror = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 tracing = { workspace = true }
 

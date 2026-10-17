@@ -43,6 +43,6 @@ A modern rust application framework, asynchronous and with batteries included.
 
 You have two ways to take advantage of dependency injection:
 - Dependency inversion using traits
-- Dependency injection using structs and functions
+- Dependency injection using structs
 
 ![Dependency Management](docs/diagram.png)
