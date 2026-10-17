@@ -26,6 +26,10 @@ extern crate proc_macro;
 /// #[microrust::main]
 /// async fn main() { /* ... */ }
 /// ```
+///
+/// Arguments are forwarded to `#[tokio::main]`, e.g.
+/// `#[microrust::main(flavor = "current_thread")]`. Tokio is resolved through
+/// `microrust`, so the application needs no `tokio` dependency of its own.
 #[proc_macro_attribute]
 pub fn main(
     args: proc_macro::TokenStream,
@@ -40,6 +44,10 @@ pub fn main(
 /// #[microrust::test]
 /// async fn my_test() { /* ... */ }
 /// ```
+///
+/// Arguments are forwarded to `#[tokio::test]`, e.g.
+/// `#[microrust::test(flavor = "multi_thread")]`. Like [`main`], it needs no
+/// `tokio` dependency in the calling crate.
 #[proc_macro_attribute]
 pub fn test(
     args: proc_macro::TokenStream,
@@ -86,8 +94,11 @@ pub fn singleton(
 /// }
 /// ```
 ///
-/// Applies `#[async_trait]` to the `impl` itself, so the trait needs no
-/// `Cargo.toml` entry for `async-trait`.
+/// Applies `#[async_trait]` to the `impl` itself, so the `impl` block needs no
+/// `async-trait` import. A trait with `async fn` methods must still be
+/// declared with `#[async_trait]` (and the crate defining it must depend on
+/// `async-trait`), because the trait's signatures and the impl's have to be
+/// rewritten the same way for the impl to match.
 ///
 /// # Errors
 ///

@@ -2,8 +2,9 @@
 //!
 //! Nothing here is part of the public API. It exists so that macro-generated
 //! code can resolve its dependencies through `microrust` itself, rather than
-//! requiring every downstream crate to depend on `async-trait` and `tracing`
-//! directly.
+//! requiring every downstream crate to depend on `async-trait`, `tokio` and
+//! `tracing` directly.
 
 pub use async_trait::async_trait;
+pub use tokio;
 pub use tracing;

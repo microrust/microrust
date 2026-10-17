@@ -72,10 +72,10 @@ functions that run **before `main`**:
 **Macros**
 - Generated code must refer to everything through absolute paths:
   `::microrust::…`, `::std::…`, `::core::…`. Third-party crates the expansion
-  needs (`async_trait`, `tracing`) are re-exported from
+  needs (`async_trait`, `tokio`, `tracing`) are re-exported from
   `microrust::__private`. Never make downstream users add a dependency for
-  generated code to compile. (Known exception: `#[microrust::main]` still
-  emits a bare `#[tokio::main]`.)
+  generated code to compile. tokio's own macros need
+  `crate = "::microrust::__private::tokio"` for this to hold.
 - Report misuse with `crate::error::macro_error` / `syn::Error::into_compile_error`,
   never with `panic!` or `parse_quote!`. Users should get a spanned diagnostic,
   not "custom attribute panicked".
@@ -134,7 +134,9 @@ All crates share `workspace.package.version`. When bumping, also bump
 ## Don't
 
 - Don't add dependencies without a reason; the runtime deliberately avoids
-  depending on a `tracing` subscriber or a full tokio runtime.
+  depending on a `tracing` subscriber. (tokio's `rt-multi-thread` and
+  `macros` are deliberate: `#[microrust::main]` / `#[microrust::test]`
+  expand through the re-export.)
 - Don't commit `target/`, nested `Cargo.lock` files, or `.DS_Store`.
 - Don't treat ambiguous trait bindings as overrides; there is no
   qualification syntax yet, and `ctor` order across crates is unspecified.

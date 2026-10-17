@@ -51,14 +51,14 @@ fn mutual_dependency_is_detected() {
 
 #[test]
 #[traced_test]
-#[should_panic(expected = "dependency cycle")]
+#[should_panic(expected = "found 1 dependency cycle(s) in the injection graph")]
 fn report_registrations_panics_on_cycle() {
     report_registrations();
 }
 
 #[test]
 #[traced_test]
-#[should_panic(expected = "dependency cycle")]
+#[should_panic(expected = "found 1 dependency cycle(s) in the injection graph")]
 fn first_resolution_panics_on_cycle() {
     get_instance::<CycleA>();
 }

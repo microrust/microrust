@@ -78,7 +78,7 @@ initializing and **deadlock** rather than fail, so the cycle is reported up
 front with the offending types named:
 
 ```text
-[microrust] found dependency cycle(s) detected in the injection graph:
+[microrust] found 1 dependency cycle(s) in the injection graph:
     cycle_test::CycleA -> cycle_test::CycleB -> cycle_test::CycleA
 ```
 
@@ -87,7 +87,7 @@ Cycles that pass through a trait binding are caught too. A dependency on
 `#[inject_trait]`, and the trait shows up in the reported path:
 
 ```text
-[microrust] found dependency cycle(s) detected in the injection graph:
+[microrust] found 1 dependency cycle(s) in the injection graph:
     trait_cycle_test::TraitCycleA -> dyn trait_cycle_test::TraitCycleService
     -> trait_cycle_test::TraitCycleB -> trait_cycle_test::TraitCycleA
 ```

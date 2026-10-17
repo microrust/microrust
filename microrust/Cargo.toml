@@ -17,11 +17,12 @@ microrust_macros = { workspace = true }
 async-trait = { workspace = true }
 ctor = { workspace = true }
 petgraph = { workspace = true }
-tokio = { workspace = true, features = ["sync"] }
+# `macros` and `rt-multi-thread` back `#[microrust::main]` / `#[microrust::test]`,
+# which expand through the `__private` re-export so users need no tokio entry.
+tokio = { workspace = true, features = ["sync", "macros", "rt-multi-thread"] }
 tracing = { workspace = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing-test = { workspace = true, features = ["no-env-filter"] }
 
 # Own target: the fixture registers a deliberate dependency cycle, which would

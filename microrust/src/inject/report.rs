@@ -16,7 +16,7 @@ use crate::inject::{
 
 /// Panics with every detected cycle, used by both [`report_registrations`] and
 /// the first-resolution guard so the message is identical either way.
-fn __fail_on_cycles(context: &str) -> Vec<Vec<&'static str>> {
+fn __fail_on_cycles() -> Vec<Vec<&'static str>> {
     let cycles = dependency_cycles();
     if cycles.is_empty() {
         return cycles;
@@ -28,8 +28,8 @@ fn __fail_on_cycles(context: &str) -> Vec<Vec<&'static str>> {
         .collect();
 
     panic!(
-        "[microrust] {} dependency cycle(s) detected in the injection graph: {}",
-        context,
+        "[microrust] found {} dependency cycle(s) in the injection graph: {}",
+        rendered.len(),
         rendered.join("; ")
     );
 }
@@ -168,7 +168,7 @@ pub fn report_registrations() {
 
     debug!("[microrust] {edge_count} dependency edge(s)");
 
-    __fail_on_cycles("found");
+    __fail_on_cycles();
     __fail_on_trait_collisions();
 }
 
@@ -192,6 +192,6 @@ pub(crate) fn __assert_no_cycles() {
     });
 
     if CYCLIC.load(Ordering::Relaxed) {
-        __fail_on_cycles("found");
+        __fail_on_cycles();
     }
 }
