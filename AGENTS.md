@@ -61,7 +61,7 @@ functions that run **before `main`**:
 - A trait binding stores a monomorphized `fn() -> Arc<dyn T>` that calls
   `get_instance::<S>()` and coerces. The trait view and struct view share one
   allocation.
-- Struct→dependency edges go into a petgraph `DiGraph` (`__STRUCT_DEPS`) for
+- Struct→dependency edges go into a small adjacency-list graph (`__STRUCT_DEPS`) for
   cycle detection (`inject/report.rs`).
 - `report_registrations()` logs everything and panics on cycles or ambiguous
   trait bindings. The first `get_instance()` in a process also checks for cycles

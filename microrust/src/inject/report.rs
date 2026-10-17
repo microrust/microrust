@@ -3,14 +3,10 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use petgraph::{
-    graph::{DiGraph, NodeIndex},
-    visit::{DfsEvent, IntoNodeIdentifiers, depth_first_search},
-};
 use tracing::debug;
 
 use crate::inject::{
-    structs::{__DepNode, __STRUCT_DEPS, __STRUCT_REGISTRY},
+    structs::{__DepGraph, __STRUCT_DEPS, __STRUCT_REGISTRY},
     traits::{__TRAIT_COLLISIONS, __TRAIT_REGISTRY},
 };
 
@@ -80,36 +76,61 @@ pub fn dependency_cycles() -> Vec<Vec<&'static str>> {
     __find_cycles(&graph)
 }
 
-fn __find_cycles(graph: &DiGraph<__DepNode, ()>) -> Vec<Vec<&'static str>> {
-    let mut cycles: Vec<Vec<&'static str>> = Vec::new();
-    let mut path: Vec<NodeIndex> = Vec::new();
+fn __find_cycles(graph: &__DepGraph) -> Vec<Vec<&'static str>> {
+    #[derive(Clone, Copy, PartialEq)]
+    enum Visit {
+        New,
+        OnPath,
+        Done,
+    }
 
-    // Returning `Ok(())` always lets the traversal continue past the first back
-    // edge, so every cycle is reported instead of only the earliest one.
-    let _: Result<(), ()> = depth_first_search(graph, graph.node_identifiers(), |event| {
-        match event {
-            // The stack tracks `Discover`/`Finish` rather than `TreeEdge`
-            // because the traversal root is never the target of a `TreeEdge`.
-            // Pushing only tree edges would leave the root off the stack and
-            // silently miss the most common case, a cycle closing at the root.
-            DfsEvent::Discover(node, _) => path.push(node),
-            // `to` is an ancestor of `from` on the current DFS stack, so
-            // `to ..= from` is the cycle, and the closing hop is `to` again.
-            DfsEvent::BackEdge(_, to) => {
-                if let Some(start) = path.iter().position(|node| *node == to) {
-                    let mut cycle: Vec<&'static str> =
-                        path[start..].iter().map(|node| graph[*node].name).collect();
-                    cycle.push(graph[to].name);
-                    cycles.push(cycle);
-                }
-            }
-            DfsEvent::Finish(_, _) => {
-                path.pop();
-            }
-            _ => {}
+    let mut visit = vec![Visit::New; graph.node_count()];
+    let mut cycles: Vec<Vec<&'static str>> = Vec::new();
+
+    // Iterative rather than recursive, so a deep dependency chain cannot
+    // overflow the stack. Each frame is a node on the current path plus the
+    // position of the next dependency to explore from it.
+    for root in 0..graph.node_count() {
+        if visit[root] != Visit::New {
+            continue;
         }
-        Ok(())
-    });
+        visit[root] = Visit::OnPath;
+        let mut path: Vec<(usize, usize)> = vec![(root, 0)];
+
+        while let Some((node, next)) = path.last_mut() {
+            let node = *node;
+            let Some(&dep) = graph.deps(node).get(*next) else {
+                visit[node] = Visit::Done;
+                path.pop();
+                continue;
+            };
+            *next += 1;
+
+            match visit[dep] {
+                Visit::New => {
+                    visit[dep] = Visit::OnPath;
+                    path.push((dep, 0));
+                }
+                // An edge back onto the current path closes a cycle:
+                // `dep ..= node` is the cycle, and the closing hop is `dep`
+                // again. The scan keeps going afterwards, so every cyclic
+                // region is reported instead of only the first.
+                Visit::OnPath => {
+                    if let Some(start) = path.iter().position(|(on_path, _)| *on_path == dep) {
+                        let mut cycle: Vec<&'static str> = path[start..]
+                            .iter()
+                            .map(|(on_path, _)| graph.name(*on_path))
+                            .collect();
+                        cycle.push(graph.name(dep));
+                        cycles.push(cycle);
+                    }
+                }
+                // Fully explored with no path back here, or its cycle was
+                // already reported when it was on the path.
+                Visit::Done => {}
+            }
+        }
+    }
 
     cycles
 }
@@ -193,5 +214,89 @@ pub(crate) fn __assert_no_cycles() {
 
     if CYCLIC.load(Ordering::Relaxed) {
         __fail_on_cycles();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::any::TypeId;
+
+    use super::__find_cycles;
+    use crate::inject::structs::{__DepGraph, __DepNode};
+
+    // Distinct types give distinct `TypeId`s; the graph only ever sees those
+    // and the names, so marker structs stand in for real singletons.
+    struct A;
+    struct B;
+    struct C;
+    struct D;
+
+    fn node<T: 'static>(name: &'static str) -> __DepNode {
+        __DepNode {
+            type_id: TypeId::of::<T>(),
+            name,
+        }
+    }
+
+    fn graph(edges: &[(__DepNode, __DepNode)]) -> __DepGraph {
+        let mut graph = __DepGraph::default();
+        for (from, to) in edges {
+            graph.add_edge(*from, *to);
+        }
+        graph
+    }
+
+    #[test]
+    fn diamond_is_not_a_cycle() {
+        // A -> B -> D and A -> C -> D: D is reached twice, but never while it
+        // is still on the path.
+        let graph = graph(&[
+            (node::<A>("A"), node::<B>("B")),
+            (node::<A>("A"), node::<C>("C")),
+            (node::<B>("B"), node::<D>("D")),
+            (node::<C>("C"), node::<D>("D")),
+        ]);
+        assert!(__find_cycles(&graph).is_empty());
+    }
+
+    #[test]
+    fn cycle_closing_at_the_root_is_found() {
+        let graph = graph(&[
+            (node::<A>("A"), node::<B>("B")),
+            (node::<B>("B"), node::<C>("C")),
+            (node::<C>("C"), node::<A>("A")),
+        ]);
+        assert_eq!(__find_cycles(&graph), vec![vec!["A", "B", "C", "A"]]);
+    }
+
+    #[test]
+    fn self_dependency_is_a_two_element_path() {
+        let graph = graph(&[(node::<A>("A"), node::<A>("A"))]);
+        assert_eq!(__find_cycles(&graph), vec![vec!["A", "A"]]);
+    }
+
+    #[test]
+    fn repeated_edge_reports_its_cycle_once() {
+        let graph = graph(&[
+            (node::<A>("A"), node::<B>("B")),
+            (node::<A>("A"), node::<B>("B")),
+            (node::<B>("B"), node::<A>("A")),
+        ]);
+        assert_eq!(graph.edge_count(), 2);
+        assert_eq!(__find_cycles(&graph), vec![vec!["A", "B", "A"]]);
+    }
+
+    #[test]
+    fn disjoint_cycles_are_all_reported_in_insertion_order() {
+        let graph = graph(&[
+            (node::<A>("A"), node::<B>("B")),
+            (node::<B>("B"), node::<A>("A")),
+            (node::<C>("C"), node::<D>("D")),
+            (node::<D>("D"), node::<C>("C")),
+        ]);
+        assert_eq!(
+            __find_cycles(&graph),
+            vec![vec!["A", "B", "A"], vec!["C", "D", "C"]]
+        );
     }
 }

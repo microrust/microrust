@@ -21,9 +21,6 @@ async-trait = { workspace = true }
 # rustc's dead-code lint misses the registration fn, so a constructor reached
 # only through a trait binding warns as "never used" (`trait_cycle_test.rs`).
 ctor = { workspace = true, default-features = false, features = ["std", "priority"] }
-# Only `graph::DiGraph` and `visit` are used; `graphmap`, `stable_graph` and
-# `matrix_graph` would be dead code.
-petgraph = { workspace = true, default-features = false, features = ["std"] }
 # `macros` and `rt-multi-thread` back `#[microrust::main]` / `#[microrust::test]`,
 # which expand through the `__private` re-export so users need no tokio entry.
 # No `sync`: the registries use `std::sync`.

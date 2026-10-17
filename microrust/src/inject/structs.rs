@@ -4,7 +4,6 @@ use std::{
     sync::{Arc, LazyLock, Mutex},
 };
 
-use petgraph::graph::DiGraph;
 use tracing::debug;
 
 #[doc(hidden)]
@@ -41,8 +40,67 @@ pub struct __DepNode {
 pub(crate) static __STRUCT_REGISTRY: LazyLock<Mutex<__FactoryMap>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
-pub(crate) static __STRUCT_DEPS: LazyLock<Mutex<DiGraph<__DepNode, ()>>> =
-    LazyLock::new(|| Mutex::new(DiGraph::new()));
+/// The dependency graph: one node per type, edges as adjacency lists.
+///
+/// Nodes live in a `Vec` in insertion order, with a `TypeId` index beside it.
+/// The index makes adding an edge O(1); the `Vec` keeps traversal order
+/// deterministic, so cycle reports list paths in the same order on every run,
+/// which iterating a `HashMap` would not.
+#[derive(Default)]
+pub(crate) struct __DepGraph {
+    index: HashMap<TypeId, usize>,
+    nodes: Vec<__DepGraphNode>,
+}
+
+struct __DepGraphNode {
+    name: &'static str,
+    deps: Vec<usize>,
+}
+
+impl __DepGraph {
+    /// Adds a `from -> to` edge, creating either node on first sight.
+    ///
+    /// A repeated edge (a constructor taking the same dependency twice) is
+    /// dropped: it adds no reachability, and a parallel edge into a cycle
+    /// would have that cycle reported twice.
+    pub(crate) fn add_edge(&mut self, from: __DepNode, to: __DepNode) {
+        let from = self.node(from);
+        let to = self.node(to);
+        let deps = &mut self.nodes[from].deps;
+        if !deps.contains(&to) {
+            deps.push(to);
+        }
+    }
+
+    fn node(&mut self, node: __DepNode) -> usize {
+        *self.index.entry(node.type_id).or_insert_with(|| {
+            self.nodes.push(__DepGraphNode {
+                name: node.name,
+                deps: Vec::new(),
+            });
+            self.nodes.len() - 1
+        })
+    }
+
+    pub(crate) fn node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub(crate) fn edge_count(&self) -> usize {
+        self.nodes.iter().map(|node| node.deps.len()).sum()
+    }
+
+    pub(crate) fn name(&self, node: usize) -> &'static str {
+        self.nodes[node].name
+    }
+
+    pub(crate) fn deps(&self, node: usize) -> &[usize] {
+        &self.nodes[node].deps
+    }
+}
+
+pub(crate) static __STRUCT_DEPS: LazyLock<Mutex<__DepGraph>> =
+    LazyLock::new(|| Mutex::new(__DepGraph::default()));
 
 #[doc(hidden)]
 pub trait __InstanceFactory: Send + Sync {
@@ -133,27 +191,8 @@ pub(crate) fn __collect_trait_binding<T: ?Sized + 'static, S: 'static>() {
     );
 }
 
-/// Adds a `from -> to` edge, reusing existing nodes for types already present.
-///
-/// Reuse is required for correctness, not tidiness: `petgraph` identifies nodes
-/// by index, so blindly adding a node per edge would give a type depended on by
-/// three structs three disconnected nodes and make traversal meaningless.
 fn __add_dep(from: __DepNode, to: __DepNode) {
-    let mut graph = __STRUCT_DEPS.lock().unwrap();
-
-    let from = __dep_node(&mut graph, from);
-    let to = __dep_node(&mut graph, to);
-    graph.add_edge(from, to, ());
-}
-
-fn __dep_node(
-    graph: &mut DiGraph<__DepNode, ()>,
-    node: __DepNode,
-) -> petgraph::graph::NodeIndex {
-    graph
-        .node_indices()
-        .find(|index| graph[*index] == node)
-        .unwrap_or_else(|| graph.add_node(node))
+    __STRUCT_DEPS.lock().unwrap().add_edge(from, to);
 }
 
 #[doc(hidden)]
