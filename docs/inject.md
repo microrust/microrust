@@ -42,6 +42,12 @@ function that returns `Self`, and every parameter must be `Arc<Struct>` or
 `Arc<dyn Trait>`. Other methods on the type may be `async`, as `print` is above.
 A constructor that returns another type, or is `async`, is a compile error.
 
+The `impl` block must be for a concrete type: `impl Wrapper<u32>` works,
+`impl<T> Wrapper<T>` is rejected. A trait dependency must name exactly one
+trait. Write `Arc<dyn Repo>` and declare `Send + Sync` as supertraits of
+`Repo`, because `Arc<dyn Repo + Send + Sync>` is a different type that would
+never match the binding.
+
 ## Startup diagnostics
 
 Registries are filled from `#[ctor]` functions, which run in `.init_array`

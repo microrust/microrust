@@ -66,7 +66,8 @@ pub fn test(
 /// # Errors
 ///
 /// Emits a `compile_error!` if the attribute does not take exactly one argument,
-/// or is applied to a trait `impl` (that is [`inject_trait`]'s job).
+/// is applied to a trait `impl` (that is [`inject_trait`]'s job), or is applied
+/// to a generic `impl`.
 #[proc_macro_attribute]
 pub fn singleton(
     args: proc_macro::TokenStream,
@@ -90,13 +91,14 @@ pub fn singleton(
 ///
 /// # Errors
 ///
-/// Emits a `compile_error!` if applied to anything other than a trait `impl`.
+/// Emits a `compile_error!` if given arguments, or if applied to anything other
+/// than a non-generic trait `impl`.
 #[proc_macro_attribute]
 pub fn inject_trait(
-    _args: proc_macro::TokenStream,
+    args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    inject_trait_impl(_args, input)
+    inject_trait_impl(args, input)
 }
 
 // #[doc(hidden)]

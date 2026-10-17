@@ -9,46 +9,64 @@ pub struct Dep {
     pub is_trait: bool,
 }
 
+/// Why a constructor parameter cannot be injected.
+pub enum DepError {
+    /// Not of the shape `Arc<Struct>` or `Arc<dyn Trait>` at all.
+    Unsupported,
+    /// `Arc<dyn Trait + ...>` with more than one trait bound.
+    MultipleBounds,
+}
+
 /// Unwraps `Arc<Inner>` and reports whether `Inner` is a trait object.
 ///
 /// Accepts `Arc`, `std::sync::Arc` and `core::sync::Arc` alike, since only the
 /// final path segment is inspected.
-pub fn classify_dep(ty: &Type) -> Option<Dep> {
+pub fn classify_dep(ty: &Type) -> Result<Dep, DepError> {
     let Type::Path(type_path) = ty else {
-        return None;
+        return Err(DepError::Unsupported);
     };
-    let outer = type_path.path.segments.last()?;
+    let outer = type_path
+        .path
+        .segments
+        .last()
+        .ok_or(DepError::Unsupported)?;
     if outer.ident != "Arc" {
-        return None;
+        return Err(DepError::Unsupported);
     }
     let PathArguments::AngleBracketed(args) = &outer.arguments else {
-        return None;
+        return Err(DepError::Unsupported);
     };
-    let GenericArgument::Type(inner) = args.args.first()? else {
-        return None;
+    let Some(GenericArgument::Type(inner)) = args.args.first() else {
+        return Err(DepError::Unsupported);
     };
 
     match inner {
-        Type::Path(_) => Some(Dep {
+        Type::Path(_) => Ok(Dep {
             ty: inner.clone(),
             is_trait: false,
         }),
         Type::TraitObject(obj) => {
-            // Require exactly one non-auto-trait bound so the emitted turbofish
-            // is always a well-formed `dyn Trait`.
+            // Exactly one trait bound, auto traits included. Trait bindings are
+            // keyed by `TypeId::of::<dyn Trait>()`, and `dyn Trait + Send` is a
+            // distinct type with its own `TypeId`, so accepting extra bounds
+            // would compile and then miss the binding at runtime. Lifetime
+            // bounds don't affect `TypeId`, so they are let through.
             let mut traits = obj.bounds.iter().filter_map(|bound| match bound {
                 TypeParamBound::Trait(trait_bound) => Some(&trait_bound.path),
                 _ => None,
             });
-            let trait_path = traits.next()?;
-            if traits.next().is_some() || trait_path.segments.is_empty() {
-                return None;
+            let trait_path = traits.next().ok_or(DepError::Unsupported)?;
+            if traits.next().is_some() {
+                return Err(DepError::MultipleBounds);
             }
-            Some(Dep {
+            if trait_path.segments.is_empty() {
+                return Err(DepError::Unsupported);
+            }
+            Ok(Dep {
                 ty: inner.clone(),
                 is_trait: true,
             })
         }
-        _ => None,
+        _ => Err(DepError::Unsupported),
     }
 }

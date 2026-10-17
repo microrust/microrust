@@ -4,11 +4,23 @@ use quote::quote;
 use syn::{ItemImpl, parse_macro_input};
 
 pub fn inject_trait_impl(
-    _args: proc_macro::TokenStream,
+    args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
+    // Rejected rather than ignored: accepting arguments silently would read as
+    // a qualifier or option that has no effect.
+    if !args.is_empty() {
+        return macro_error("#[inject_trait] takes no arguments");
+    }
     let input = parse_macro_input!(input as ItemImpl);
-    // println!("{:#?}", input);
+    // Same reason as in `#[singleton]`: the `ctor` needs concrete types for
+    // both `TypeId`s, and a generic impl provides neither.
+    if !input.generics.params.is_empty() || input.generics.where_clause.is_some() {
+        return macro_error(
+            "#[inject_trait] cannot be applied to a generic impl; \
+             implement the trait for a concrete type",
+        );
+    }
 
     // Both paths are kept whole for codegen; `get_ident()` would reject any
     // module-qualified path, and taking only the final segment of `self_ty`

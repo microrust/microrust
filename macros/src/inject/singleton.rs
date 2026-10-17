@@ -1,5 +1,5 @@
 use crate::error::macro_error;
-use crate::inject::dep::classify_dep;
+use crate::inject::dep::{DepError, classify_dep};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, TokenStream as TokenStream2};
 use quote::{format_ident, quote};
@@ -17,6 +17,15 @@ pub fn inject_singleton_impl(
     let input = parse_macro_input!(input as ItemImpl);
     if input.trait_.is_some() {
         return macro_error("Please use attribute macro #[inject_trait]");
+    }
+    // Registration runs in a `ctor`, which needs one concrete type to take a
+    // `TypeId` of. A generic impl has none, and letting it through surfaces as
+    // unrelated errors about unbound type parameters in the generated code.
+    if !input.generics.params.is_empty() || input.generics.where_clause.is_some() {
+        return macro_error(
+            "#[singleton] cannot be applied to a generic impl; \
+             implement it for a concrete type, e.g. `impl Wrapper<u32>`",
+        );
     }
 
     // Keep the whole `self_ty` path for codegen: emitting only the final
@@ -62,12 +71,25 @@ pub fn inject_singleton_impl(
             Pat::Ident(pat_ident) => pat_ident.ident.to_string(),
             _ => "<binding>".to_string(),
         };
-        let Some(dep) = classify_dep(&pat_type.ty) else {
-            return macro_error(&format!(
-                "unsupported constructor parameter `{param}: {}` in \
-                 `{struct_ident}::{constructor_ident}`; expected `Arc<Struct>` or `Arc<dyn Trait>`",
-                quote!(#pat_type.ty)
-            ));
+        let ty = &pat_type.ty;
+        let dep = match classify_dep(ty) {
+            Ok(dep) => dep,
+            Err(DepError::Unsupported) => {
+                return macro_error(&format!(
+                    "unsupported constructor parameter `{param}: {}` in \
+                     `{struct_ident}::{constructor_ident}`; expected `Arc<Struct>` or `Arc<dyn Trait>`",
+                    quote!(#ty)
+                ));
+            }
+            Err(DepError::MultipleBounds) => {
+                return macro_error(&format!(
+                    "unsupported constructor parameter `{param}: {}` in \
+                     `{struct_ident}::{constructor_ident}`; a trait dependency must name \
+                     exactly one trait, as `Arc<dyn Trait>`. Declare `Send + Sync` as \
+                     supertraits of the trait instead of adding them here",
+                    quote!(#ty)
+                ));
+            }
         };
         deps.push(dep);
     }
@@ -98,7 +120,7 @@ pub fn inject_singleton_impl(
         .collect();
 
     let collect_deps: Vec<TokenStream2> = deps
-            .iter()
+        .iter()
         .map(|dep| {
             let ty = &dep.ty;
             if dep.is_trait {
@@ -124,8 +146,11 @@ pub fn inject_singleton_impl(
             // The annotation is load-bearing: without it, a constructor that
             // returns some other type still coerces to `Arc<dyn Any>` and only
             // fails at the `downcast` in `get_instance`, long after compile time.
+            // `<..>` makes the path valid in expression position for a type
+            // with generic arguments: `Wrapper<u32>::new` would parse as a
+            // chain of comparisons.
             let inst: ::std::sync::Arc<#self_path> =
-                ::std::sync::Arc::new(#self_path::#constructor_ident(#(#ctor_args),*));
+                ::std::sync::Arc::new(<#self_path>::#constructor_ident(#(#ctor_args),*));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
             inst_any
         }

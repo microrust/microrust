@@ -49,6 +49,60 @@
 //!     }
 //! }
 //! ```
+//!
+//! A generic `impl` is rejected, since registration needs one concrete type.
+//! Implement it for a concrete instantiation instead (`impl Wrapper<u32>`):
+//!
+//! ```compile_fail
+//! use microrust::inject::singleton;
+//!
+//! struct Wrapper<T>(T);
+//!
+//! #[singleton(new)]
+//! impl<T: Default + Send + Sync + 'static> Wrapper<T> {
+//!     fn new() -> Self {
+//!         Self(T::default())
+//!     }
+//! }
+//! ```
+//!
+//! A trait dependency names exactly one trait. `Arc<dyn Trait + Send + Sync>`
+//! is a different type from `Arc<dyn Trait>` and would never match the
+//! binding, so it is rejected; declare `Send + Sync` as supertraits instead:
+//!
+//! ```compile_fail
+//! use std::sync::Arc;
+//! use microrust::inject::singleton;
+//!
+//! trait Repo {}
+//! struct Service;
+//!
+//! #[singleton(new)]
+//! impl Service {
+//!     fn new(repo: Arc<dyn Repo + Send + Sync>) -> Self {
+//!         Self
+//!     }
+//! }
+//! ```
+//!
+//! `#[inject_trait]` takes no arguments:
+//!
+//! ```compile_fail
+//! use microrust::inject::{inject_trait, singleton};
+//!
+//! trait Repo: Send + Sync {}
+//! struct Postgres;
+//!
+//! #[singleton(new)]
+//! impl Postgres {
+//!     fn new() -> Self {
+//!         Self
+//!     }
+//! }
+//!
+//! #[inject_trait(primary)]
+//! impl Repo for Postgres {}
+//! ```
 
 mod instance;
 mod report;
