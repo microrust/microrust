@@ -80,8 +80,12 @@ functions that run **before `main`**:
   never with `panic!` or `parse_quote!`. Users should get a spanned diagnostic,
   not "custom attribute panicked".
 - Keep the **full** `self_ty` / trait path when generating code; use the last
-  segment only to build identifiers (`ctor_<Name>`). `module_path_test.rs` is
-  the regression test for this.
+  segment only in diagnostics. `module_path_test.rs` is the regression test for
+  this.
+- Emit generated helper items (the `ctor` registration fn) inside an anonymous
+  `const _: () = { … };` block with a fixed name. Never derive a module-level
+  item name from a type or trait name: those collide for same-named types in
+  different modules and for generic traits. `ctor_name_test.rs` covers this.
 - Injected parameters are recognized only as `Arc<Struct>` or `Arc<dyn Trait>`
   (`inject/dep.rs::classify_dep`). Extend that function rather than
   pattern-matching types elsewhere.

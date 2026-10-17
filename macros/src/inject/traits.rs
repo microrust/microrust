@@ -1,6 +1,6 @@
 use crate::error::macro_error;
 use proc_macro::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{ItemImpl, parse_macro_input};
 
 pub fn inject_trait_impl(
@@ -16,21 +16,9 @@ pub fn inject_trait_impl(
     let Some((trait_path, _)) = &input.trait_ else {
         return macro_error("Expecting: impl <trait> for <type>");
     };
-    let Some(last_trait_segment) = trait_path.segments.last() else {
-        return macro_error("Expecting: impl <trait> for <type>");
-    };
     let syn::Type::Path(self_path) = &*input.self_ty else {
         return macro_error("Expecting: impl <trait> for <type>");
     };
-    let Some(last_struct_segment) = self_path.path.segments.last() else {
-        return macro_error("Expecting: impl <trait> for <type>");
-    };
-
-    // Generated `ctor_*` fn names must stay a bare identifier.
-    let trait_ident = last_trait_segment.ident.clone();
-    let struct_ident = last_struct_segment.ident.clone();
-
-    let ctor_ident = format_ident!("ctor_{}_{}", trait_ident, struct_ident);
 
     // The coercion from `Arc<Struct>` to `Arc<dyn Trait>` is only provable
     // here, where both concrete types are in scope, so the resolver is built
@@ -39,7 +27,11 @@ pub fn inject_trait_impl(
     #[::microrust::__private::async_trait]
     #input
 
-    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {
+    // Scoped in an anonymous `const` for the same reason as in `#[singleton]`:
+    // a name built from the trait and struct idents collided for generic
+    // traits implemented twice, and for structs named like `<Trait>_<Struct>`.
+    const _: () = {
+    ::microrust::ctor_parse!(#[ctor(unsafe)] fn __microrust_register() {
         ::microrust::inject::__collect_trait::<dyn #trait_path, #self_path>(
             || {
                 let inst: ::std::sync::Arc<#self_path> =
@@ -49,6 +41,7 @@ pub fn inject_trait_impl(
             },
         );
     });
+    };
     };
     // println!("{:#?}", tokens);
     TokenStream::from(tokens)

@@ -28,7 +28,7 @@ pub fn inject_singleton_impl(
     let Some(last_segment) = self_path.path.segments.last() else {
         return macro_error("Expecting: impl <type>");
     };
-    // Generated `ctor_*` fn names must stay a bare identifier.
+    // Used only to name the type in diagnostics.
     let struct_ident = last_segment.ident.clone();
 
     let constructor_fn = input.items.iter().find_map(|item| match item {
@@ -72,9 +72,6 @@ pub fn inject_singleton_impl(
         deps.push(dep);
     }
 
-    let ctor_ident = format_ident!("ctor_{}", struct_ident);
-    let ctor_deps_ident = format_ident!("ctor_deps_{}", struct_ident);
-
     // One `let argN` per dependency, resolved through the matching accessor.
     let resolve_args: Vec<TokenStream2> = deps
         .iter()
@@ -100,28 +97,17 @@ pub fn inject_singleton_impl(
         .map(|index| format_ident!("arg{index}"))
         .collect();
 
-    // Dependency edges are only recorded when there is something to record.
-    let deps_ctor = if deps.is_empty() {
-        TokenStream2::new()
-    } else {
-        let collect_deps: Vec<TokenStream2> = deps
+    let collect_deps: Vec<TokenStream2> = deps
             .iter()
-            .map(|dep| {
-                let ty = &dep.ty;
-                if dep.is_trait {
-                    quote! { ::microrust::inject::__collect_trait_deps::<#self_path, #ty>(); }
-                } else {
-                    quote! { ::microrust::inject::__collect_struct_deps::<#self_path, #ty>(); }
-                }
-            })
-            .collect();
-
-        quote! {
-            ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_deps_ident() {
-                #(#collect_deps)*
-            });
-        }
-    };
+        .map(|dep| {
+            let ty = &dep.ty;
+            if dep.is_trait {
+                quote! { ::microrust::inject::__collect_trait_deps::<#self_path, #ty>(); }
+            } else {
+                quote! { ::microrust::inject::__collect_struct_deps::<#self_path, #ty>(); }
+            }
+        })
+        .collect();
 
     let tokens = quote! {
     #input
@@ -145,8 +131,15 @@ pub fn inject_singleton_impl(
         }
     }
 
-    ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {::microrust::inject::__collect_struct::<#self_path>();});
-    #deps_ctor
+    // The anonymous `const` gives the `ctor` fn a scope of its own, so its name
+    // never enters the caller's module. Deriving the name from the type instead
+    // collided for same-named types in different modules.
+    const _: () = {
+        ::microrust::ctor_parse!(#[ctor(unsafe)] fn __microrust_register() {
+            ::microrust::inject::__collect_struct::<#self_path>();
+            #(#collect_deps)*
+        });
+    };
     };
     TokenStream::from(tokens)
 }
