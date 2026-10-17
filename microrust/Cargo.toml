@@ -15,11 +15,19 @@ workspace = true
 microrust_macros = { workspace = true }
 
 async-trait = { workspace = true }
-ctor = { workspace = true }
-petgraph = { workspace = true }
+# `ctor_parse!` is a declarative macro, so the `proc_macro` feature (the
+# `#[ctor]` attribute) is unused. `priority` stays even though no priorities
+# are set: on Apple targets it changes how ctors are emitted, and without it
+# rustc's dead-code lint misses the registration fn, so a constructor reached
+# only through a trait binding warns as "never used" (`trait_cycle_test.rs`).
+ctor = { workspace = true, default-features = false, features = ["std", "priority"] }
+# Only `graph::DiGraph` and `visit` are used; `graphmap`, `stable_graph` and
+# `matrix_graph` would be dead code.
+petgraph = { workspace = true, default-features = false, features = ["std"] }
 # `macros` and `rt-multi-thread` back `#[microrust::main]` / `#[microrust::test]`,
 # which expand through the `__private` re-export so users need no tokio entry.
-tokio = { workspace = true, features = ["sync", "macros", "rt-multi-thread"] }
+# No `sync`: the registries use `std::sync`.
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing = { workspace = true }
 
 [dev-dependencies]
