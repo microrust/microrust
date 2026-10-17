@@ -12,7 +12,7 @@ analyzer = "nextest"
 env.RUST_LOG = "debug"
 need_stdout = true
 allow_warnings = true
-on_success = "scroll-to-bottom"
+# on_success = "scroll-to-bottom"
 
 [jobs.doc-test]
 command = ["cargo", "test", "--doc"]

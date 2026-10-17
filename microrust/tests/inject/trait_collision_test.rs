@@ -69,3 +69,25 @@ fn ambiguous_binding_resolves_to_exactly_one_impl() {
         resolved.id()
     );
 }
+/// The report must be repeatable. Raising the collision panic while still
+/// holding the collision lock poisoned it, so a second call (a retry, or any
+/// call after `catch_unwind`) died with `PoisonError` instead of naming the
+/// clash.
+#[test]
+#[traced_test]
+fn report_registrations_panics_with_same_message_when_repeated() {
+    let message = |result: std::thread::Result<()>| {
+        let payload = result.expect_err("report_registrations should panic");
+        payload
+            .downcast_ref::<String>()
+            .cloned()
+            .or_else(|| payload.downcast_ref::<&str>().map(|s| s.to_string()))
+            .unwrap_or_default()
+    };
+
+    let first = message(std::panic::catch_unwind(report_registrations));
+    let second = message(std::panic::catch_unwind(report_registrations));
+
+    assert!(first.contains("ambiguous trait binding"), "first: {first}");
+    assert_eq!(first, second);
+}

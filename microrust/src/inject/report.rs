@@ -39,20 +39,24 @@ fn __fail_on_cycles(context: &str) -> Vec<Vec<&'static str>> {
 /// Mirrors the cycle check: the clash is recorded during `ctor` registration and
 /// raised here, because nothing observed at registration time would be seen.
 fn __fail_on_trait_collisions() {
-    let collisions = __TRAIT_COLLISIONS.lock().unwrap();
-    if collisions.is_empty() {
+    // Rendered inside a scope so the guard is gone before the panic: panicking
+    // while holding it would poison the mutex, and every later report would
+    // fail with `PoisonError` instead of naming the clash.
+    let rendered: Vec<String> = {
+        let collisions = __TRAIT_COLLISIONS.lock().unwrap();
+        collisions
+            .iter()
+            .map(|collision| {
+                format!(
+                    "{} is implemented by both {} and {}",
+                    collision.trait_name, collision.first_impl, collision.second_impl,
+                )
+            })
+            .collect()
+    };
+    if rendered.is_empty() {
         return;
     }
-
-    let rendered: Vec<String> = collisions
-        .iter()
-        .map(|collision| {
-            format!(
-                "{} is implemented by both {} and {}",
-                collision.trait_name, collision.first_impl, collision.second_impl,
-            )
-        })
-        .collect();
 
     panic!(
         "[microrust] found {} ambiguous trait binding(s): {}",
@@ -143,8 +147,8 @@ pub fn report_registrations() {
     let mut struct_names: Vec<&'static str> = structs.values().map(|entry| entry.name).collect();
     struct_names.sort_unstable();
     let struct_count = struct_names.len();
-    let edge_count = __STRUCT_DEPS.lock().unwrap().edge_count();
     drop(structs);
+    let edge_count = __STRUCT_DEPS.lock().unwrap().edge_count();
 
     let traits = __TRAIT_REGISTRY.lock().unwrap();
     let mut trait_names: Vec<&'static str> = traits.values().map(|entry| entry.name).collect();

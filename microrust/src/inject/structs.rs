@@ -160,8 +160,10 @@ fn __dep_node(
 pub fn __factory_entry(type_id: TypeId) -> __FactoryEntry {
     debug!("__factory_entry() called");
 
-    let map = __STRUCT_REGISTRY.lock().unwrap();
-    *map.get(&type_id).unwrap()
+    // Copied out before unwrapping so a miss panics without the guard held,
+    // which would otherwise poison the registry for every later resolution.
+    let entry = __STRUCT_REGISTRY.lock().unwrap().get(&type_id).copied();
+    entry.expect("no singleton is registered for this type")
 }
 
 #[doc(hidden)]

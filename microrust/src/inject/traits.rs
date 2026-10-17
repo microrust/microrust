@@ -163,14 +163,14 @@ pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
     debug!("Input Trait TypeName: {:#}", type_name::<T>());
 
     // Hold a handle rather than a borrow: `resolve` re-enters the singleton
-    // registry, so the trait lock must not be held across the call.
+    // registry, so the trait lock must not be held across the call. The
+    // missing-binding panic is raised only after the guard is dropped too, so
+    // a failed lookup cannot poison the registry for every later one.
     let bridge: __Bridge = {
         let map = __TRAIT_REGISTRY.lock().unwrap();
-        let entry = map
-            .get(&type_id_trait)
-            .expect("no implementation is registered for this trait");
-        Arc::clone(&entry.bridge)
-    };
+        map.get(&type_id_trait).map(|entry| Arc::clone(&entry.bridge))
+    }
+    .expect("no implementation is registered for this trait");
 
     let resolve = bridge
         .downcast_ref::<__TraitBridge<T>>()
