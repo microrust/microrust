@@ -5,6 +5,8 @@ use std::{
 };
 use tracing::{debug, instrument, warn};
 
+use crate::inject::structs::__collect_trait_binding;
+
 /// Erased resolver for a single trait.
 ///
 /// Turning `Arc<Struct>` into `Arc<dyn Trait>` is an unsizing coercion, which
@@ -49,25 +51,30 @@ pub(crate) static __TRAIT_REGISTRY: LazyLock<Mutex<HashMap<TypeId, __TraitEntry>
 
 /// Registers `resolve` as the way to obtain an `Arc<T>` for trait `T`.
 ///
-/// `resolve` must return `get_instance::<U>()` coerced to `Arc<T>` for the
-/// struct `U` that implements `T`, so both views share one instance.
-/// `impl_name` is `U`'s name, used to report an ambiguous binding.
+/// `resolve` must return `get_instance::<S>()` coerced to `Arc<T>` for the
+/// struct `S` that implements `T`, so both views share one instance.
 /// Emitted by `#[inject_trait]` and run once at startup.
+///
+/// `S` is taken as a type rather than a name so the winning binding can also be
+/// recorded as a `T -> S` edge in the dependency graph, which is what lets a
+/// cycle that passes through a trait object be detected.
 ///
 /// If a second struct implements the same trait, the first registration is kept
 /// and the clash is recorded. There is no qualification syntax yet, so every
 /// such clash is a wiring mistake rather than an intentional override.
 #[doc(hidden)]
-pub fn __collect_trait<T>(impl_name: &'static str, resolve: fn() -> Arc<T>)
+pub fn __collect_trait<T, S>(resolve: fn() -> Arc<T>)
 where
     T: Send + Sync + ?Sized + 'static,
+    S: 'static,
 {
     debug!("__collect_trait() called for {}", type_name::<T>());
 
     let type_id_trait = TypeId::of::<T>();
+    let impl_name = type_name::<S>();
 
-    // The registry lock is released before recording a collision so the two
-    // mutexes are never held at once.
+    // The registry lock is released before recording a collision or an edge so
+    // two mutexes are never held at once.
     let colliding_with = {
         let mut map = __TRAIT_REGISTRY.lock().unwrap();
         match map.get(&type_id_trait) {
@@ -86,12 +93,16 @@ where
         }
     };
 
-    if let Some(first_impl) = colliding_with {
-        __record_trait_collision(__TraitCollision {
+    // Only the winning binding gets an edge: the loser is unreachable through
+    // the trait, so an edge for it could only report a cycle that cannot occur.
+    // Taken after the registry lock is released, like the collision record.
+    match colliding_with {
+        None => __collect_trait_binding::<T, S>(),
+        Some(first_impl) => __record_trait_collision(__TraitCollision {
             trait_name: type_name::<T>(),
             first_impl,
             second_impl: impl_name,
-        });
+        }),
     }
 }
 

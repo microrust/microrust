@@ -40,8 +40,7 @@ pub fn inject_trait_impl(
     #input
 
     ::microrust::ctor_parse!(#[ctor(unsafe)] #[allow(non_snake_case)] fn #ctor_ident() {
-        ::microrust::inject::__collect_trait::<dyn #trait_path>(
-            ::std::any::type_name::<#self_path>(),
+        ::microrust::inject::__collect_trait::<dyn #trait_path, #self_path>(
             || {
                 let inst: ::std::sync::Arc<#self_path> =
                     ::microrust::inject::get_instance::<#self_path>();

@@ -31,6 +31,12 @@ tracing-test = { workspace = true, features = ["no-env-filter"] }
 name = "cycle_test"
 path = "tests/inject/cycle_test.rs"
 
+# Own target: a deliberate cycle that closes through a trait binding rather
+# than a direct struct dependency.
+[[test]]
+name = "trait_cycle_test"
+path = "tests/inject/trait_cycle_test.rs"
+
 # Own target: two structs deliberately claim the same trait, and
 # `report_registrations()` is expected to abort on it.
 [[test]]

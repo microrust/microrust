@@ -172,6 +172,16 @@ front with the offending types named:
     cycle_test::CycleA -> cycle_test::CycleB -> cycle_test::CycleA
 ```
 
+Cycles that pass through a trait binding are caught too. A dependency on
+`Arc<dyn Trait>` is followed to the struct bound to that trait with
+`#[inject_trait]`, and the trait shows up in the reported path:
+
+```text
+[microrust] found dependency cycle(s) detected in the injection graph:
+    trait_cycle_test::TraitCycleA -> dyn trait_cycle_test::TraitCycleService
+    -> trait_cycle_test::TraitCycleB -> trait_cycle_test::TraitCycleA
+```
+
 ### Ambiguous trait bindings
 
 If two structs `#[inject_trait]` the same trait, the first registration wins and

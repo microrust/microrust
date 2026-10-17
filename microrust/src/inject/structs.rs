@@ -113,6 +113,26 @@ pub fn __collect_trait_deps<T: Send + Sync + 'static, U: Send + Sync + ?Sized + 
     );
 }
 
+/// Records that trait `T` resolves to struct `S`.
+///
+/// Without this edge a trait object is a dead end in the graph: `A -> dyn T`
+/// would be recorded, but not that resolving `dyn T` constructs `S`, so a cycle
+/// closing through `S` back to `A` would go unreported and deadlock instead.
+pub(crate) fn __collect_trait_binding<T: ?Sized + 'static, S: 'static>() {
+    debug!("__collect_trait_binding() called: {} -> {}", type_name::<T>(), type_name::<S>());
+
+    __add_dep(
+        __DepNode {
+            type_id: TypeId::of::<T>(),
+            name: type_name::<T>(),
+        },
+        __DepNode {
+            type_id: TypeId::of::<S>(),
+            name: type_name::<S>(),
+        },
+    );
+}
+
 /// Adds a `from -> to` edge, reusing existing nodes for types already present.
 ///
 /// Reuse is required for correctness, not tidiness: `petgraph` identifies nodes
