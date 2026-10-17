@@ -9,7 +9,7 @@
 
 use std::sync::Arc;
 
-use async_trait::async_trait;
+use microrust::inject::async_trait;
 use microrust::inject::{
     dependency_cycles, get_instance, inject_trait, report_registrations, singleton,
 };

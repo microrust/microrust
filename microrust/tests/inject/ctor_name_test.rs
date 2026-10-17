@@ -5,7 +5,7 @@
 
 #![allow(non_camel_case_types)]
 
-use async_trait::async_trait;
+use microrust::inject::async_trait;
 use microrust::inject::{get_instance, get_trait_instance, inject_trait, singleton};
 use tracing_test::traced_test;
 

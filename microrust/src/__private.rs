@@ -4,6 +4,11 @@
 //! code can resolve its dependencies through `microrust` itself, rather than
 //! requiring every downstream crate to depend on `async-trait`, `tokio` and
 //! `tracing` directly.
+//!
+//! `async_trait` is also re-exported publicly as
+//! `microrust::inject::async_trait`, for users' trait declarations. Generated
+//! code keeps using this path so the macros don't depend on where the public
+//! re-export lives.
 
 pub use async_trait::async_trait;
 pub use tokio;

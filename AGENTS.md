@@ -14,6 +14,7 @@ Workspace (edition 2024, resolver 3, Rust stable):
 |---|---|---|
 | `microrust` | `microrust/` | Runtime: registries, resolution, diagnostics. Re-exports the macros. |
 | `microrust_macros` | `macros/` | Proc macros: `#[singleton]`, `#[inject_trait]`, `#[main]`, `#[test]`. |
+| `microrust_examples` | `examples/` | Runnable examples in `src/bin/`. Not published (`publish = false`). |
 
 Users depend only on `microrust`. The macros crate is an implementation detail.
 
@@ -64,7 +65,9 @@ functions that run **before `main`**:
 - Struct→dependency edges go into a small adjacency-list graph (`__STRUCT_DEPS`) for
   cycle detection (`inject/report.rs`).
 - `report_registrations()` logs everything and panics on cycles or ambiguous
-  trait bindings. The first `get_instance()` in a process also checks for cycles
+  trait bindings. `#[microrust::main]` / `#[microrust::test]` run the same
+  checks without logging (`__startup_checks`, once per process) before the
+  function body. The first `get_instance()` in a process also checks for cycles
   (otherwise a cycle deadlocks inside `OnceLock`).
 
 ## Rules that are easy to break
@@ -73,7 +76,9 @@ functions that run **before `main`**:
 - Generated code must refer to everything through absolute paths:
   `::microrust::…`, `::std::…`, `::core::…`. Third-party crates the expansion
   needs (`async_trait`, `tokio`, `tracing`) are re-exported from
-  `microrust::__private`. Never make downstream users add a dependency for
+  `microrust::__private`. `async_trait` is additionally public as
+  `microrust::inject::async_trait`, because users must put it on the traits
+  they inject; docs, tests and examples use that path, never `__private`. Never make downstream users add a dependency for
   generated code to compile. tokio's own macros need
   `crate = "::microrust::__private::tokio"` for this to hold.
 - Report misuse with `crate::error::macro_error` / `syn::Error::into_compile_error`,
@@ -118,6 +123,26 @@ functions that run **before `main`**:
 - Executable examples live as doctests in `microrust/src/lib.rs` and item docs.
   If you change public behaviour, update them.
 
+## Examples
+
+`examples/` exists to prove that a user crate needs nothing but `microrust`.
+Doctests and tests inside `microrust` can't show that, because they see
+`microrust`'s own dependencies.
+
+- Its only dependencies are `microrust` and `tracing-subscriber` (for logs in
+  debug builds; `microrust` deliberately ships no subscriber). Never add
+  `async-trait`, `tokio`, `ctor` or anything else to make an example compile.
+  If one doesn't compile without it, the fix belongs in `microrust`'s
+  re-exports.
+- Never use `microrust::__private` in an example.
+- Examples are `src/bin/` binaries, so plain `cargo check` / `cargo clippy`
+  builds them. Each one calls `microrust_examples::init_logging()` first.
+- Workspace builds merge features across members, which can hide a missing one.
+  `cargo build -p microrust_examples` builds the crate on its own, the way a
+  user's crate would see `microrust`.
+- New public behaviour gets an example. Run one with
+  `cargo run -p microrust_examples --bin <name>`.
+
 ## Docs
 
 - User docs: `docs/inject.md` (keep it in sync with behaviour and panic
@@ -137,6 +162,9 @@ All crates share `workspace.package.version`. When bumping, also bump
   depending on a `tracing` subscriber. (tokio's `rt-multi-thread` and
   `macros` are deliberate: `#[microrust::main]` / `#[microrust::test]`
   expand through the re-export.)
+- Don't add support for tokio's single-threaded runtime. Only the
+  multi-threaded one is supported: `#[microrust::main]` / `#[microrust::test]`
+  always emit `flavor = "multi_thread"` and reject any other flavor.
 - Don't commit `target/`, nested `Cargo.lock` files, or `.DS_Store`.
 - Don't treat ambiguous trait bindings as overrides; there is no
   qualification syntax yet, and `ctor` order across crates is unspecified.

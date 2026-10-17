@@ -12,8 +12,7 @@
 //! implementation is chosen at the edge.
 //!
 //! ```
-//! use async_trait::async_trait;
-//! use microrust::inject::{get_trait_instance, inject_trait, singleton};
+//! use microrust::inject::{async_trait, get_trait_instance, inject_trait, singleton};
 //!
 //! struct InMemoryUserRepo;
 //!
@@ -79,10 +78,12 @@
 //! # Startup
 //!
 //! Registries are populated by `#[ctor]` functions that run before `main`, when
-//! no `tracing` subscriber exists yet, so registration is silent. To log what
-//! was registered, and to fail fast on a dependency cycle or an ambiguous trait
-//! binding, call [`inject::report_registrations`] once the subscriber is
-//! installed.
+//! no `tracing` subscriber exists yet, so registration is silent.
+//!
+//! [`main`] and [`test`] check the wiring before running your code: a
+//! dependency cycle or an ambiguous trait binding panics with the offending
+//! types named. To also log what was registered, call
+//! [`inject::report_registrations`] once the subscriber is installed.
 //!
 //! ```ignore
 //! fn main() {
@@ -93,6 +94,18 @@
 //!
 //! Not shown as compiled above because the subscriber implementation is the
 //! application's choice: this crate deliberately does not depend on one.
+//!
+//! # Runtime
+//!
+//! [`main`] and [`test`] run async code on tokio's multi-threaded runtime, the
+//! only one MicroRust supports, without the application depending on tokio.
+//! Their arguments tune that runtime (`worker_threads = 4`); asking for another
+//! flavor is a compile error:
+//!
+//! ```compile_fail
+//! #[microrust::main(flavor = "current_thread")]
+//! async fn main() {}
+//! ```
 //!
 //! # Scope
 //!

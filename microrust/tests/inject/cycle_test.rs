@@ -62,3 +62,10 @@ fn report_registrations_panics_on_cycle() {
 fn first_resolution_panics_on_cycle() {
     get_instance::<CycleA>();
 }
+/// The startup checks in `#[microrust::test]` catch the cycle before the body
+/// runs; reaching the body would panic with a non-matching message.
+#[microrust::test]
+#[should_panic(expected = "found 1 dependency cycle(s) in the injection graph")]
+async fn test_macro_rejects_cycle_before_body() {
+    panic!("body ran despite broken wiring");
+}

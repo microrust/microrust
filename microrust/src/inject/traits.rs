@@ -137,7 +137,7 @@ pub fn __contains_trait(type_id_trait: &TypeId) -> bool {
 /// ```no_run
 /// use microrust::inject::get_trait_instance;
 ///
-/// # #[async_trait::async_trait]
+/// # #[microrust::inject::async_trait]
 /// # trait UserRepo: Send + Sync { fn find(&self, id: u32) -> Option<String>; }
 /// let repo = get_trait_instance::<dyn UserRepo>();
 /// ```
@@ -149,12 +149,12 @@ pub fn __contains_trait(type_id_trait: &TypeId) -> bool {
 /// Panics transitively through [`get_instance`](crate::inject::get_instance)
 /// for a missing singleton registration or a dependency cycle.
 ///
-/// Does **not** panic if more than one struct implements `T`. The first
+/// Does **not** itself panic if more than one struct implements `T`: the first
 /// registration is kept, and which one is first is not stable, because
-/// `#[ctor]` ordering across crates is unspecified. Unlike a cycle this is not
-/// caught here, so an application that never calls
-/// [`report_registrations`](crate::inject::report_registrations) can still
-/// resolve an arbitrary implementation.
+/// `#[ctor]` ordering across crates is unspecified. `#[microrust::main]` and
+/// `#[microrust::test]` reject that wiring before any code runs, as does
+/// [`report_registrations`](crate::inject::report_registrations); only an
+/// application that uses none of them can resolve an arbitrary implementation.
 #[instrument]
 pub fn get_trait_instance<T: Send + Sync + ?Sized + 'static>() -> Arc<T> {
     debug!("get_trait_instance() called");

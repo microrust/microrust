@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use async_trait::async_trait;
+use microrust::inject::async_trait;
 use microrust::inject::{get_instance, get_trait_instance};
 use tracing_test::traced_test;
 

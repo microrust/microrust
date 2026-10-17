@@ -10,6 +10,57 @@ You have two ways to take advantage of dependency injection:
 
 ## trait
 
+Depend on `Arc<dyn Trait>` and bind one implementation with `#[inject_trait]`:
+
+```rust
+use std::sync::Arc;
+use microrust::inject::{async_trait, get_instance, inject_trait, singleton};
+
+#[async_trait]
+trait UserRepo: Send + Sync {
+    async fn find(&self, id: u32) -> Option<String>;
+}
+
+struct InMemoryUserRepo;
+
+#[singleton(new)]
+impl InMemoryUserRepo {
+    fn new() -> Self {
+        Self
+    }
+}
+
+#[inject_trait]
+impl UserRepo for InMemoryUserRepo {
+    async fn find(&self, id: u32) -> Option<String> {
+        Some(format!("user-{id}"))
+    }
+}
+
+struct UserService {
+    repo: Arc<dyn UserRepo>,
+}
+
+#[singleton(new)]
+impl UserService {
+    fn new(repo: Arc<dyn UserRepo>) -> Self {
+        Self { repo }
+    }
+}
+
+#[microrust::main]
+async fn main() {
+    let service = get_instance::<UserService>();
+    assert_eq!(service.repo.find(7).await.as_deref(), Some("user-7"));
+}
+```
+
+A trait with `async fn` methods must be declared with `#[async_trait]`:
+`#[inject_trait]` rewrites the impl with it, and the trait has to match. Use
+the re-export `microrust::inject::async_trait`; no `async-trait` dependency
+is needed. The trait needs `Send + Sync` as supertraits, and a dependency on it
+is written `Arc<dyn UserRepo>`, without extra bounds.
+
 ## struct
 
 ```rust
@@ -112,7 +163,17 @@ wiring mistake rather than an override.
 than on a request path. `microrust::inject::dependency_cycles()` returns the
 cycle information as data if you would rather inspect it yourself.
 
-As a safety net for applications that never call `report_registrations()`, the
-first `get_instance()` in a process performs the cycle check and fails with the
-same message instead of deadlocking. Ambiguous traits have no such net: an
-application that skips the report can still resolve one silently.
+You don't have to call it for the checks alone. `#[microrust::main]` and
+`#[microrust::test]` run both checks before your code, with the same messages,
+so broken wiring fails at startup and in every test run. They log nothing,
+though: they run before you install a subscriber, so the registration log
+stays with `report_registrations()`.
+
+To test deliberately broken wiring, use a plain `#[test]` rather than
+`#[microrust::test]`, which would fail before your assertions run.
+`report_registrations()` and `dependency_cycles()` are synchronous and need no
+runtime.
+
+Without either macro, a cycle is still caught on the first `get_instance()` in
+a process instead of deadlocking. An ambiguous trait binding is then only
+caught if you call `report_registrations()`.

@@ -160,9 +160,11 @@ fn __find_cycles(graph: &__DepGraph) -> Vec<Vec<&'static str>> {
 /// crates is unspecified, so the winner is not even stable between builds. Both
 /// are therefore reported up front with the offending types named.
 ///
-/// A cycle is additionally caught on the first `get_instance()` in a process,
-/// since that would otherwise deadlock. Ambiguous traits are not, so an
-/// application that never calls this function can still resolve one silently.
+/// You don't need to call this for the checks alone: `#[microrust::main]` and
+/// `#[microrust::test]` run both before your code, and a cycle is also caught
+/// on the first `get_instance()` in a process, since it would otherwise
+/// deadlock. Only an application that uses neither macro and never calls this
+/// function can resolve an ambiguous trait silently.
 pub fn report_registrations() {
     let structs = __STRUCT_REGISTRY.lock().unwrap();
     let mut struct_names: Vec<&'static str> = structs.values().map(|entry| entry.name).collect();
@@ -214,6 +216,36 @@ pub(crate) fn __assert_no_cycles() {
 
     if CYCLIC.load(Ordering::Relaxed) {
         __fail_on_cycles();
+    }
+}
+
+/// Startup guard emitted by `#[microrust::main]` and `#[microrust::test]`.
+///
+/// Runs the same checks as [`report_registrations`], with the same panic
+/// messages, but logs nothing: it runs before the function body, so before the
+/// application has had a chance to install a subscriber. The log stays opt-in
+/// through [`report_registrations`].
+///
+/// Evaluated once per process, because plain `cargo test` runs every test of a
+/// binary in one process and each `#[microrust::test]` calls this. The `Once`
+/// body records the verdict and the panic is raised outside it, for the reason
+/// given on [`__assert_no_cycles`].
+#[doc(hidden)]
+pub fn __startup_checks() {
+    static ONCE: Once = Once::new();
+    static BROKEN: AtomicBool = AtomicBool::new(false);
+
+    ONCE.call_once(|| {
+        // Taken one at a time and released before the next, so two registry
+        // locks are never held at once.
+        let cyclic = !dependency_cycles().is_empty();
+        let ambiguous = !__TRAIT_COLLISIONS.lock().unwrap().is_empty();
+        BROKEN.store(cyclic || ambiguous, Ordering::Relaxed);
+    });
+
+    if BROKEN.load(Ordering::Relaxed) {
+        __fail_on_cycles();
+        __fail_on_trait_collisions();
     }
 }
 

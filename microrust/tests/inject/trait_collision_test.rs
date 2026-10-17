@@ -7,7 +7,7 @@
 //! Deliberately cycle-free, so the panic can only come from the ambiguous
 //! binding and not from the dependency check.
 
-use async_trait::async_trait;
+use microrust::inject::async_trait;
 use microrust::inject::{get_trait_instance, inject_trait, report_registrations, singleton};
 use tracing_test::traced_test;
 
@@ -90,4 +90,13 @@ fn report_registrations_panics_with_same_message_when_repeated() {
 
     assert!(first.contains("ambiguous trait binding"), "first: {first}");
     assert_eq!(first, second);
+}
+
+/// `#[microrust::test]` runs the startup checks before the body, so the
+/// ambiguous binding fails the test without the body ever running. The body's
+/// own panic doesn't match `expected`, so reaching it would fail the test.
+#[microrust::test]
+#[should_panic(expected = "ambiguous trait binding")]
+async fn test_macro_rejects_ambiguous_binding_before_body() {
+    panic!("body ran despite broken wiring");
 }

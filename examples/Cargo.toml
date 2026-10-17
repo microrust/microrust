@@ -1,0 +1,20 @@
+[package]
+name = "microrust_examples"
+description = "Runnable MicroRust examples"
+publish = false
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+
+# `microrust` is the only framework dependency on purpose: these examples
+# compile only if everything a user needs is reachable through it. Don't add
+# `async-trait`, `tokio`, `ctor` or anything else the macros expand to.
+[dependencies]
+microrust = { path = "../microrust" }
+# Not a framework dependency: `microrust` deliberately ships no subscriber, so
+# an application that wants to see its logs installs one, as users would.
+tracing-subscriber = { workspace = true }

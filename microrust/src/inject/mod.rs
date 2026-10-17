@@ -112,7 +112,25 @@ mod traits;
 // re-exports
 pub use instance::get_instance;
 pub use microrust_macros::{inject_trait, singleton};
-pub use report::{dependency_cycles, report_registrations};
+
+/// Re-export of [`async_trait`](https://docs.rs/async-trait), for declaring
+/// traits that are injected through [`inject_trait`].
+///
+/// [`inject_trait`] always applies `#[async_trait]` to the `impl`, so a trait
+/// with `async fn` methods must be declared with it too, or the rewritten impl
+/// no longer matches the trait. Re-exported so that doesn't cost an extra
+/// dependency:
+///
+/// ```
+/// use microrust::inject::async_trait;
+///
+/// #[async_trait]
+/// trait UserRepo: Send + Sync {
+///     async fn find(&self, id: u32) -> Option<String>;
+/// }
+/// ```
+pub use async_trait::async_trait;
+pub use report::{__startup_checks, dependency_cycles, report_registrations};
 pub use structs::{
     __FactoryEntry, __InstanceFactory, __collect_struct, __collect_struct_deps,
     __collect_trait_deps,

@@ -27,9 +27,15 @@ extern crate proc_macro;
 /// async fn main() { /* ... */ }
 /// ```
 ///
-/// Arguments are forwarded to `#[tokio::main]`, e.g.
-/// `#[microrust::main(flavor = "current_thread")]`. Tokio is resolved through
-/// `microrust`, so the application needs no `tokio` dependency of its own.
+/// Before the body runs, the injection graph is checked: a dependency cycle or
+/// an ambiguous trait binding panics with the offending types named, the same
+/// check as `microrust::inject::report_registrations()` minus its logging.
+///
+/// MicroRust only supports tokio's multi-threaded runtime: a `flavor` other
+/// than `"multi_thread"` is a compile error. Other arguments are forwarded to
+/// `#[tokio::main]`, e.g. `#[microrust::main(worker_threads = 4)]`. Tokio is
+/// resolved through `microrust`, so the application needs no `tokio`
+/// dependency of its own.
 #[proc_macro_attribute]
 pub fn main(
     args: proc_macro::TokenStream,
@@ -38,16 +44,24 @@ pub fn main(
     core_runtime_main_impl(args, input)
 }
 
-/// Runs a test body on a single-threaded Tokio runtime.
+/// Runs a test body on a multi-threaded Tokio runtime.
 ///
 /// ```ignore
 /// #[microrust::test]
 /// async fn my_test() { /* ... */ }
 /// ```
 ///
-/// Arguments are forwarded to `#[tokio::test]`, e.g.
-/// `#[microrust::test(flavor = "multi_thread")]`. Like [`main`], it needs no
-/// `tokio` dependency in the calling crate.
+/// Runs the same wiring check as [`main`] before the body, so a test fails
+/// immediately on a dependency cycle or an ambiguous trait binding. To test
+/// deliberately broken wiring, use a plain `#[test]`: `report_registrations()`
+/// and `dependency_cycles()` are synchronous and need no runtime.
+///
+/// Unlike `#[tokio::test]`, which defaults to a single-threaded runtime, this
+/// always uses the multi-threaded one, so tests run on the same runtime as
+/// the application. As with [`main`], a `flavor` other than `"multi_thread"`
+/// is a compile error, other arguments are forwarded (e.g.
+/// `#[microrust::test(worker_threads = 2)]`), and no `tokio` dependency is
+/// needed in the calling crate.
 #[proc_macro_attribute]
 pub fn test(
     args: proc_macro::TokenStream,
@@ -94,11 +108,11 @@ pub fn singleton(
 /// }
 /// ```
 ///
-/// Applies `#[async_trait]` to the `impl` itself, so the `impl` block needs no
-/// `async-trait` import. A trait with `async fn` methods must still be
-/// declared with `#[async_trait]` (and the crate defining it must depend on
-/// `async-trait`), because the trait's signatures and the impl's have to be
-/// rewritten the same way for the impl to match.
+/// Applies `#[async_trait]` to the `impl` itself. A trait with `async fn`
+/// methods must therefore be declared with `#[async_trait]` too, because the
+/// trait's signatures and the impl's have to be rewritten the same way for the
+/// impl to match. Use the re-export `microrust::inject::async_trait` for that;
+/// no `async-trait` dependency is needed.
 ///
 /// # Errors
 ///

@@ -83,6 +83,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "microrust_examples"
+version = "0.0.0-alpha.11"
+dependencies = [
+ "microrust",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "microrust_macros"
 version = "0.0.0-alpha.11"
 dependencies = [

@@ -16,3 +16,9 @@ fn acyclic_injection_graph_reports_no_cycles() {
 fn report_registrations_succeeds_for_acyclic_graph() {
     report_registrations();
 }
+/// The startup checks must pass over the full, valid graph of the shared
+/// binary, or every `#[microrust::test]` in a correctly wired crate would fail.
+#[microrust::test]
+async fn test_macro_startup_checks_pass_for_valid_wiring() {
+    assert!(dependency_cycles().is_empty());
+}
