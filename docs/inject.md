@@ -37,6 +37,11 @@ async fn main() {
 }
 ```
 
+The constructor named in `#[singleton(...)]` must be a synchronous associated
+function that returns `Self`, and every parameter must be `Arc<Struct>` or
+`Arc<dyn Trait>`. Other methods on the type may be `async`, as `print` is above.
+A constructor that returns another type, or is `async`, is a compile error.
+
 ## Startup diagnostics
 
 Registries are filled from `#[ctor]` functions, which run in `.init_array`

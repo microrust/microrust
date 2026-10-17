@@ -40,6 +40,14 @@ pub fn inject_singleton_impl(
             "constructor method `{constructor_ident}` not found in `impl {struct_ident}`"
         ));
     };
+    // Caught by the `Arc<Self>` annotation below as well, but as a type
+    // mismatch against an opaque future; naming the actual mistake is clearer.
+    if constructor_fn.sig.asyncness.is_some() {
+        return macro_error(&format!(
+            "`{struct_ident}::{constructor_ident}` is `async`; singleton constructors \
+             must be synchronous, since resolution happens outside any runtime"
+        ));
+    }
 
     let mut deps = Vec::new();
     for arg in &constructor_fn.sig.inputs {
@@ -127,7 +135,11 @@ pub fn inject_singleton_impl(
 
             #(#resolve_args)*
 
-            let inst = ::std::sync::Arc::new(#self_path::#constructor_ident(#(#ctor_args),*));
+            // The annotation is load-bearing: without it, a constructor that
+            // returns some other type still coerces to `Arc<dyn Any>` and only
+            // fails at the `downcast` in `get_instance`, long after compile time.
+            let inst: ::std::sync::Arc<#self_path> =
+                ::std::sync::Arc::new(#self_path::#constructor_ident(#(#ctor_args),*));
             let inst_any = inst as ::std::sync::Arc<dyn ::std::any::Any + Send + Sync>;
             inst_any
         }

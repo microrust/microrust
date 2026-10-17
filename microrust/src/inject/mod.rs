@@ -13,6 +13,42 @@
 //!
 //! [`report_registrations`] logs what was registered and fails on a dependency
 //! cycle or an ambiguous trait binding.
+//!
+//! # Constructor rules
+//!
+//! A `#[singleton]` constructor must return `Self`. Anything else is rejected
+//! at compile time rather than surfacing as a failed downcast on the first
+//! [`get_instance`]:
+//!
+//! ```compile_fail,E0308
+//! use microrust::inject::singleton;
+//!
+//! struct Other;
+//! struct Service;
+//!
+//! #[singleton(new)]
+//! impl Service {
+//!     fn new() -> Other {
+//!         Other
+//!     }
+//! }
+//! ```
+//!
+//! It must also be synchronous. Resolution can happen outside any async
+//! runtime, so there is nothing to drive a constructor's future:
+//!
+//! ```compile_fail
+//! use microrust::inject::singleton;
+//!
+//! struct Service;
+//!
+//! #[singleton(new)]
+//! impl Service {
+//!     async fn new() -> Self {
+//!         Self
+//!     }
+//! }
+//! ```
 
 mod instance;
 mod report;
